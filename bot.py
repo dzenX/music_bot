@@ -11,7 +11,14 @@ async def on_message(message):
         return
 
     if message.content.startswith('!hello'):
-        msg = 'Hello {0.author.mention}'.format(message)
+        msg = 'Hello {0.author.mention}, wanna some music?'.format(message)
+        await client.send_message(message.channel, msg)
+    if message.content.startswith('!yes'):
+        msg = 'Omae wa mou shindeiru'.format(message)
+        await client.send_message(message.channel, msg)
+        msg = 'NO NI'.format(message)
+        await client.send_message(message.channel, msg)
+        msg = 'sry, no music yet'.format(message)
         await client.send_message(message.channel, msg)
 
 @client.event

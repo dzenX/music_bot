@@ -1,1 +1,1 @@
-# music_bot
+# Music bot for discord

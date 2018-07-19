@@ -6,8 +6,13 @@ import os
 import sys
 from datetime import datetime
 
+#
+#     LOOP BRANCH
+#
+
 #TODO: help RUTULIA
 #self = discord.self()
+
 
 ytdl_format_options = {
 	'format': 'bestaudio/best',

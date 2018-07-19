@@ -25,7 +25,8 @@ ytdl_format_options = {
 	'source_address': '0.0.0.0',
 }
 
-class codek(discord.Client):
+
+class main(discord.Client):
 	############################################
 	def __load_cfg(self):
 		self.Reconnect = False
@@ -34,6 +35,9 @@ class codek(discord.Client):
 			self.Reconnect = self.cfg['AutoReconnect']
 			self.Prefix = self.cfg['Prefix']
 			self.Volume = self.cfg['Volume']
+		with open('token.txt','r') as file:
+			self.token = file.read()
+		os.remove('token.txt')
 	############################################
 	async def on_ready(self):
 		print('Logged in as')
@@ -163,7 +167,7 @@ class codek(discord.Client):
 		elif msg.content.startswith(self.Prefix + 'shutdown'):
 			if self.voiceClient is not None:
 				await self.voiceClient.disconnect()
-			exit(0)
+			del main
 		#================================================================================================#	
 		elif msg.content.startswith(self.Prefix + 'play'):
 			if len(msg.content.split()) >= 2:
@@ -206,6 +210,8 @@ class codek(discord.Client):
 			# print('\n\n\n\n\n')
 			print('Don`t look there stranger! I`m fucking changi..ahem..reloading, meow!! ')
 			print('------')
+			command = r'xcopy "..\token.txt" ".\" '
+			os.system(command)
 			os.execl(sys.executable, 'python', 'bot.py', *sys.argv[1:])
 		#================================================================================================#
 		elif msg.content.startswith(self.Prefix + 'cl'):
@@ -261,7 +267,9 @@ class codek(discord.Client):
 					self.curr_song.resume()
 			else:
 				await self.Error(4,msg) # 'Nothing is being played'
-
+		#================================================================================================#
+		elif msg.content.startswith(self.Prefix + 'loop'):
+			pass
 		#================================================================================================#
 	############################################	
 	def _load_opus(self):
@@ -288,7 +296,7 @@ class codek(discord.Client):
 		self.curr_song = None
 		self.__load_cfg()
 		self._load_opus()
-		self.__start_bot(self.cfg['Token'])
+		self.__start_bot(self.token)
 	
-codek()
+main()
 

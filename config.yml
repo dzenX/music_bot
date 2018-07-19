@@ -1,11 +1,3 @@
-############################################
-#            vlt. Musik 2.0                #
-#              by Mondanzo                 #
-#      licensed under the MIT-license      #
-############################################
-#            CONFIGURATION FILE            #
-############################################
-
 # Replace the example Token with YOUR token otherwise the Bot won't work!  [String]
 Token: ""
 

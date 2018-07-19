@@ -41,7 +41,6 @@ class main(discord.Client):
 			self.Volume = self.cfg['Volume']
 		with open('token.txt','r') as file:
 			self.token = file.read()
-		os.remove('token.txt')
 	############################################
 	async def on_ready(self):
 		print('Logged in as')

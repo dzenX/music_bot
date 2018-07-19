@@ -100,14 +100,17 @@ class main(discord.Client):
 		await self.delete_message(curr_msg)
 		self.curr_song.start()
 	############################################
-	async def __loop(self, future, count = None):
+	async def __loop(self, count = None):
 		print("We are in __loop")
 		if count is None:
-			print('gg')
-			if self.curr_song is None:
-				future.set_future('Future is done')
-			elif self.curr_song.is_done():
-				self.curr_song.start()
+			print('h')
+			while True:
+				if self.curr_song is None:
+					print('hui')
+					break
+				elif self.curr_song.is_done():
+					print('hui2')
+					self.curr_song.start()
 
 	def got_result(future):
 		print(future.result())
@@ -299,19 +302,10 @@ class main(discord.Client):
 					else:
 						await self.__loop(l)
 			elif command_len == 1:
-				self.loop_m = asyncio.get_event_loop()
-				print('loop')
-				future = asyncio.Future()
-				print('futun')
-				asyncio.ensure_future(self.__loop(future))
-				print('ensure')
-				future.add_done_callback(self.got_result)
-				print('done')
-				try:
-					self.loop_m.run_forever()
-				finally:
-					self.loop_m.close()
-					print('close')
+				l_loop = asyncio.get_event_loop()
+				wait_task = asyncio.wait(l_loop.create_task(self.__loop()))
+				l_loop.run_until_complete(wait_task)
+				l_loop.close()
 			else:
 				await self.Error(10,msg) # 'Invalid params, just like you'
 			

@@ -186,7 +186,7 @@ class main(discord.Client):
 		elif msg.content.startswith(self.Prefix + 'shutdown'):
 			if self.voiceClient is not None:
 				await self.voiceClient.disconnect()
-			del main
+			exit(0)
 		#================================================================================================#	
 		elif msg.content.startswith(self.Prefix + 'play'):
 			if len(msg.content.split()) >= 2:

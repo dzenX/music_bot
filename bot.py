@@ -13,7 +13,6 @@ from datetime import datetime
 #TODO: help RUTULIA
 #self = discord.self()
 
-
 ytdl_format_options = {
 	'format': 'bestaudio/best',
 	'extractaudio': True,
@@ -71,6 +70,7 @@ class main(discord.Client):
 			'14': 'The song is already playing, dont you hear?',
 			'15': 'The song is already paused, dont you hear this quality silence?',
 			'16': 'Is there life below 0?',
+			'17': 'I\`ll multiply your life on this number! Meow !!!',
 			}
 		try:
 			message = Errors[str(error_id)]
@@ -100,6 +100,19 @@ class main(discord.Client):
 		await self.edit_message(curr_msg, message)
 		await self.delete_message(curr_msg)
 		self.curr_song.start()
+	############################################
+	async def __loop(self, future, count = None):
+		print("We are in __loop")
+		if count is None:
+			print('gg')
+			if self.curr_song is None:
+				future.set_future('Future is done')
+			elif self.curr_song.is_done():
+				self.curr_song.start()
+
+	def got_result(future):
+		print(future.result())
+		self.loop_m.stop()
 	############################################
 	def is_youtube_list(self,str):
 		return True if str.startswith('https://www.youtube.com/playlist?list=') or str.startswith('www.youtube.com/playlist?list=') else False
@@ -166,6 +179,7 @@ class main(discord.Client):
 			if self.voiceClient is not None:
 				await self.voiceClient.disconnect()
 				self.voiceClient = None
+				self.curr_song = None
 			else:
 				await self.Error(2,msg) # 'I`m already homeless :('
 		#================================================================================================#
@@ -227,8 +241,8 @@ class main(discord.Client):
 			if len(msg.content.split()) == 2:
 				try:
 					v = float(msg.content.split()[1])
-				except Exception as e:
-					await self.Error(7,msg)
+				except Exception:
+					await self.Error(7,msg) # 'Not valid volume value'
 				else:
 					if v > 2:
 						await self.Error(11,msg) # 'RIP ears'
@@ -274,7 +288,34 @@ class main(discord.Client):
 				await self.Error(4,msg) # 'Nothing is being played'
 		#================================================================================================#
 		elif msg.content.startswith(self.Prefix + 'loop'):
-			pass
+			command_len = len(msg.content.split())
+			if command_len == 2:
+				try:
+					l = int(msg.content.split()[1])
+				except Exception:
+					await self.Error(10,msg) # 'Invalid params, just like you'
+				else:
+					if l <= 0:
+						await self.Error(17,msg) # 'I\`ll multiply your life on this number! Meow !!!'
+					else:
+						await self.__loop(l)
+			elif command_len == 1:
+				self.loop_m = asyncio.get_event_loop()
+				print('loop')
+				future = asyncio.Future()
+				print('futun')
+				asyncio.ensure_future(self.__loop(future))
+				print('ensure')
+				future.add_done_callback(self.got_result)
+				print('done')
+				try:
+					self.loop_m.run_forever()
+				finally:
+					self.loop_m.close()
+					print('close')
+			else:
+				await self.Error(10,msg) # 'Invalid params, just like you'
+			
 		#================================================================================================#
 	############################################	
 	def _load_opus(self):

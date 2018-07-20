@@ -1,5 +1,12 @@
 import asyncio
 import os
+
+#
+#  Рабочий тестовый луп вне класа
+#
+
+
+
 g = 13
 async def foo():
 	print('Running in foo')

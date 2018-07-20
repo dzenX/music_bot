@@ -1,6 +1,12 @@
 import asyncio
 import os
 
+
+#
+# 1.py только обернут в клас + тестовая ггвп
+#
+
+
 class goo():
 	def __init__(self):
 		os.system('cls')

@@ -106,10 +106,8 @@ class main(discord.Client):
 			print('h')
 			while True:
 				if self.curr_song is None:
-					print('hui')
 					break
 				elif self.curr_song.is_done():
-					print('hui2')
 					self.curr_song.start()
 
 	def got_result(future):
@@ -231,8 +229,6 @@ class main(discord.Client):
 			# print('\n\n\n\n\n')
 			print('Don`t look there stranger! I`m fucking changi..ahem..reloading, meow!! ')
 			print('------')
-			command = r'xcopy "..\token.txt" ".\" '
-			os.system(command)
 			os.execl(sys.executable, 'python', 'bot.py', *sys.argv[1:])
 		#================================================================================================#
 		elif msg.content.startswith(self.Prefix + 'cl'):

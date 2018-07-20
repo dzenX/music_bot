@@ -10,7 +10,7 @@ from datetime import datetime
 #     LOOP BRANCH
 #
 
-#TODO: help RUTULIA
+# TODO: help RUTULIA
 #self = discord.self()
 
 ytdl_format_options = {
@@ -51,7 +51,7 @@ class main(discord.Client):
 		print('------')
 	############################################
 	# TODO: Do we need this exception ? :thinking:
-	async def Error(self,error_id,msg):
+	async def Error(self, error_id, msg):
 		Errors = {
 			'1': 'You\'re not on the voice channel',
 			'2': 'I`m already homeless :(',
@@ -82,12 +82,8 @@ class main(discord.Client):
 		else:
 			print('Error: Code: {}. {}.'.format(error_id,message))
 			await self.send_message(msg.channel, message)
-	############################################	
-	async def start_solo_song(self,msg):
-		if self.curr_song is not None:
-			self.curr_song.stop()
-		self.curr_song = await self.voiceClient.create_ytdl_player(msg.content.split()[1], ytdl_options = ytdl_format_options)
-		self.curr_song.volume = self.Volume
+	############################################
+	async def timer(self, msg):
 		message = 'Your song starts in: 10'
 		curr_msg = await self.send_message(msg.channel, message)
 		for i in range (1,10):
@@ -98,26 +94,43 @@ class main(discord.Client):
 		message = 'BOOOOOOOM!!!!'
 		await self.edit_message(curr_msg, message)
 		await self.delete_message(curr_msg)
+	############################################
+	def __after(self):
+		print('kappa_+')
+		print(self.curr_song.buff)
+		print(self.curr_song.player)
+		print(self.curr_song._end)
+		self.curr_song = self.buff_song
 		self.curr_song.start()
 	############################################
-	async def __loop(self, count = None):
-		print("We are in __loop")
-		if count is None:
-			print('h')
-			while True:
-				if self.curr_song is None:
-					break
-				elif self.curr_song.is_done():
-					self.curr_song.start()
-
-	def got_result(future):
-		print(future.result())
-		self.loop_m.stop()
+	async def start_solo_song(self, msg, bool = None):
+		if self.curr_song is not None:
+			self.curr_song.stop()
+		if bool is not None:
+			self.curr_song = await self.voiceClient.create_ytdl_player(msg.content.split()[1], ytdl_options = ytdl_format_options)
+			self.curr_song.after = self.__after
+			print(self.curr_song.buff)
+			print(self.curr_song.player)
+			print(self.curr_song._end)
+			self.buff_song = self.curr_song
+		else:
+			self.curr_song = await self.voiceClient.create_ytdl_player(msg.content.split()[1], ytdl_options = ytdl_format_options)
+		self.curr_song.volume = self.Volume
+		await self.timer(msg)
+		self.curr_song.start()
 	############################################
-	def is_youtube_list(self,str):
+	async def __loop(self, msg, count = None):
+		if count is None:
+			await self.start_solo_song(msg, True)
+		else:
+			for i in range(count-1):
+				await self.start_solo_song(msg, True)
+
+	############################################
+	def is_youtube_list(self, str):
 		return True if str.startswith('https://www.youtube.com/playlist?list=') or str.startswith('www.youtube.com/playlist?list=') else False
 	############################################
-	def is_youtube_link(self,str):
+	def is_youtube_link(self, str):
 		return True if str.startswith('https://youtu.be/') or str.startswith('www.youtube.com/') or str.startswith('https://www.youtube.com/') else False
 	############################################
 	def check_channel(self, msg, channel_name):
@@ -287,21 +300,28 @@ class main(discord.Client):
 		#================================================================================================#
 		elif msg.content.startswith(self.Prefix + 'loop'):
 			command_len = len(msg.content.split())
-			if command_len == 2:
-				try:
-					l = int(msg.content.split()[1])
-				except Exception:
-					await self.Error(10,msg) # 'Invalid params, just like you'
-				else:
-					if l <= 0:
-						await self.Error(17,msg) # 'I\`ll multiply your life on this number! Meow !!!'
+			msg_cnt = msg.content.split()
+			if command_len > 1:
+				if self.is_youtube_link(msg_cnt[1]):	
+					if not self.is_youtube_list(msg_cnt[1]):			
+						if command_len == 3:
+							try:
+								l = int(msg_cnt[2])
+							except Exception:
+								await self.Error(10,msg) # 'Invalid params, just like you'
+							else:
+								if l <= 0:
+									await self.Error(17,msg) # 'I\`ll multiply your life on this number! Meow !!!'
+								else:
+									await self.__loop(msg, l)
+						elif command_len == 2:
+							await self.__loop(msg)
+						else:
+							await self.Error(10,msg) # 'Invalid params, just like you'
 					else:
-						await self.__loop(l)
-			elif command_len == 1:
-				l_loop = asyncio.get_event_loop()
-				wait_task = asyncio.wait(l_loop.create_task(self.__loop()))
-				l_loop.run_until_complete(wait_task)
-				l_loop.close()
+						await self.Error(6,msg) # 'Not a single song'
+				else:
+					await self.Error(5,msg) # 'Not a valid link'
 			else:
 				await self.Error(10,msg) # 'Invalid params, just like you'
 			
@@ -322,7 +342,7 @@ class main(discord.Client):
 			print("Opus already loaded!")
 			print('------')
 	############################################
-	def __start_bot(self,token,**kwargs):
+	def __start_bot(self, token, **kwargs):
 		self.loop.run_until_complete(self.start(token, **kwargs))
 	############################################
 	def __init__(self):

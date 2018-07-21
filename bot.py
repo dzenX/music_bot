@@ -4,6 +4,7 @@ import youtube_dl
 import asyncio
 import os
 import sys
+import copy
 from datetime import datetime
 
 #
@@ -69,7 +70,7 @@ class main(discord.Client):
 			'14': 'The song is already playing, dont you hear?',
 			'15': 'The song is already paused, dont you hear this quality silence?',
 			'16': 'Is there life below 0?',
-			'17': 'I\`ll multiply your life on this number! Meow !!!',
+			'17': 'I\'ll multiply your life on this number! Meow !!!',
 			}
 		try:
 			message = Errors[str(error_id)]
@@ -100,24 +101,63 @@ class main(discord.Client):
 		print(self.curr_song.buff)
 		print(self.curr_song.player)
 		print(self.curr_song._end)
-		self.curr_song = self.buff_song
+		print('wp')
+		print(self.curr_song)
+		print(self.buff_song)
+		print('ez')
+		self.curr_song = copy.deepcopy(self.buff_song)
 		self.curr_song.start()
 	############################################
 	async def start_solo_song(self, msg, bool = None):
 		if self.curr_song is not None:
 			self.curr_song.stop()
+		self.curr_song = await self.voiceClient.create_ytdl_player(msg.content.split()[1], ytdl_options = ytdl_format_options)
+		self.curr_song.volume = self.Volume
+		await self.timer(msg)	
+		print('Created curr')
 		if bool is not None:
-			self.curr_song = await self.voiceClient.create_ytdl_player(msg.content.split()[1], ytdl_options = ytdl_format_options)
-			self.curr_song.after = self.__after
+			#self.curr_song.after = self.__after
+			print('Curr:')
 			print(self.curr_song.buff)
 			print(self.curr_song.player)
 			print(self.curr_song._end)
-			self.buff_song = self.curr_song
-		else:
-			self.curr_song = await self.voiceClient.create_ytdl_player(msg.content.split()[1], ytdl_options = ytdl_format_options)
-		self.curr_song.volume = self.Volume
-		await self.timer(msg)
-		self.curr_song.start()
+			print(self.curr_song)
+			print('-----')
+			#
+			#
+			#	self.buff_song = self.curr_song
+			#	This command just copy link on object, but not the object
+			#
+			#
+
+			self.buff_song = copy.deepcopy(self.curr_song)
+			# IT cant copy thread object =((()))
+			print('Copied curr to buff')
+			print('Buff:')
+			print(self.buff_song.buff)
+			print(self.buff_song.player)
+			print(self.buff_song._end)
+			print(self.buff_song)
+			print('-----')
+			await self.timer(msg)
+			self.curr_song.start()
+			print('curr start()')
+			await asyncio.sleep(10)
+			print('curr played')
+			print('Curr:')
+			print(self.curr_song.buff)
+			print(self.curr_song.player)
+			print(self.curr_song._end)
+			print(self.curr_song)
+			print('-----')
+			print('Buff:')
+			print(self.buff_song.buff)
+			print(self.buff_song.player)
+			print(self.buff_song._end)
+			print(self.buff_song)
+			print('-----')
+		#await self.timer(msg)
+		#self.curr_song.start()
 	############################################
 	async def __loop(self, msg, count = None):
 		if count is None:

@@ -47,33 +47,42 @@ class main(discord.Client):
 			self.cfg = yaml.load(file)
 			self.Prefix = self.cfg['Prefix']
 			self.Volume = self.cfg['Volume']
-		with open('my.token', 'r') as file:
-			self.token = file.read()
+		if os.path.isfile('my.token'):
+			with open('my.token', 'r') as file:
+				self.token = file.read()
+		else:
+			print("Please enter your discord account token (bot a bot account token!):")
+			token = input()
+			print("[INFO] Saving token...")
+			with open("my.token", "w") as f:
+				f.write(token)
+			print("[INFO] Starting up and logging in...")
+
 	############################################
 	def _load_opus(self):
-		print('Trying to load OpusLib:')
+		print('[INFO] Trying to load OpusLib:')
 		if not discord.opus.is_loaded():
 			discord.opus.load_opus(self.cfg['Opusfile'])
 			if discord.opus.is_loaded():
-				print ('Opus loaded from file:' + self.cfg['Opusfile'])
+				print ('[INFO] Opus loaded from file:' + self.cfg['Opusfile'])
 				print('------')
 			else:
-				print('An error occured while loading opus!')
+				print('[Error] An error occured while loading opus!')
 				print('------')
 				exit(1)
 		else:
-			print("Opus already loaded!")
+			print("[INFO] Opus already loaded!")
 			print('------')
 	############################################
 	def __start_bot(self,token,**kwargs):
 		self.loop.run_until_complete(self.start(token, **kwargs))
 	############################################
 	async def on_ready(self):
-		print('Logged in as')
+		print('[INFO] Logged in as:')
 		print(self.user.name)
 		print(self.user.id)
 		print('------')
-		print('Bot loaded succesfully at {}.'.format(datetime.now().strftime('%H:%M:%S')))
+		print('[INFO] Bot loaded succesfully at {}.'.format(datetime.now().strftime('%H:%M:%S')))
 		await self.change_presence(game = discord.Game(name = "Blue Cat, Meow !!!"))
 		print('------')
 ################################################
@@ -90,7 +99,10 @@ class main(discord.Client):
 		################
 		'connect': 'cmd_connect',
 		'summon': 'cmd_connect',
+		################
 		'disconnect': 'cmd_disconnect',
+		'gtfo': 'cmd_disconnect',
+		################
 		'shutdown': 'cmd_shutdown',
 		################
 		'play': 'cmd_play',
@@ -104,6 +116,11 @@ class main(discord.Client):
 		'loop': 'cmd_loop',
 		################
 		'reload': 'cmd_reload',
+		'rel': 'cmd_reload',
+		'relaod': 'cmd_reload',
+		't': 'cmd_test1',
+		'tt': 'cmd_test2',
+		################
 		}
 	############################################
 	async def cmd_hello(self, *args, **kwargs):
@@ -141,10 +158,10 @@ class main(discord.Client):
 			if self.is_youtube_link(url):
 				if not self.is_youtube_list(url):
 					if self.is_voice_connected(msg.server):
-						await self.start_solo_song(msg)	
+						await self.start_solo_song(msg, url)	
 					else:
 						await self.connect_voice_channel_by_author(msg)
-						await self.start_solo_song(msg)	
+						await self.start_solo_song(msg, url)	
 				else:
 					await self.Error(6, msg) # 'It`s not a single song!'
 			else:
@@ -156,7 +173,7 @@ class main(discord.Client):
 		msg = kwargs.get('msg')
 		if self.curr_song:
 			self.curr_song.stop()
-			self.curr_song = None
+			#self.curr_song = None
 		else:
 			await self.Error(4, msg) # 'Nothing is being played'
 	############################################
@@ -257,7 +274,7 @@ class main(discord.Client):
 				command = self.commands_arr.get(cmd)
 				await getattr(self, command)(*args, msg = msg)
 			else:
-				await self.Errors(17, msg) # 'No such command'
+				await self.Error(17, msg) # 'No such command'
 		else:
 			return
 	############################################
@@ -269,6 +286,7 @@ class main(discord.Client):
 	#	Utils Block
 	#
 ################################################
+	############################################
 	# TODO: Same succes message system
 	async def Error(self, error_id, msg):
 		Errors = {
@@ -294,9 +312,9 @@ class main(discord.Client):
 		try:
 			message = Errors[str(error_id)]
 		except KeyError as e:
-			print('Undefined Error Key: {}'.format(e.args[0]))
+			print('[Error] Undefined Error Key: {}'.format(e.args[0]))
 		else:
-			print('Error: Code: {}. {}'.format(error_id,message))
+			print('[Error] Code: {}. {}'.format(error_id,message))
 			await self.send_message(msg.channel, embed=discord.Embed(color=discord.Color.red(), description=(message)))
 			#await self.send_message(msg.channel, message)
 	############################################
@@ -311,6 +329,7 @@ class main(discord.Client):
 		log = '[CHATLOG] ({}) [{}] <{}> {}: {}'
 		log = log.format(msg.timestamp, msg.server.name, msg.channel.name, msg.author.display_name, msg.content)
 		print(log)
+	############################################
 ################################################
 
 
@@ -319,10 +338,36 @@ class main(discord.Client):
 	#	Play block
 	#
 ################################################
-	async def start_solo_song(self,msg):
+	players:{}
+	################################################
+	async def cmd_test1(self, *args, **kwargs):
+		print('--------')
+		print('[TEST1]')
+		print('--------')
+	async def cmd_test2(self, *args, **kwargs):
+		print('--------')
+		print('[TEST2]')
+		print('--------')
+	async def get_server_player(self, msg):
+		if self.players.__contains__(msg.server.id):
+			return players.get(msg.server.id)
+	async def start_new_player(self, msg, url):
+		try:
+			player = await super().voice_client_in(msg.server).create_ytdl_player(url)
+		except Exception as e:
+			print(e)
+		else:
+			return player
+	async def add_player_to_list(self, msg, player):
+		self.players[msg.server.id] = player
+	async def remove_player(self, msg):
+		player = players.pop(msg.server.id, None)
+		return player
+	############################################
+	async def start_solo_song(self, msg, url):
 		if self.curr_song:
 			self.curr_song.stop()
-		self.curr_song = await super().voice_client_in(msg.server).create_ytdl_player(msg.content.split()[1])
+		self.curr_song = await super().voice_client_in(msg.server).create_ytdl_player(url)
 		self.curr_song.volume = self.Volume
 		#await self.timer(msg)
 		self.curr_song.start()
@@ -338,6 +383,7 @@ class main(discord.Client):
 		message = 'BOOOOOOOM!!!!'
 		await self.edit_message(curr_msg, message)
 		await self.delete_message(curr_msg)
+	############################################
 ################################################
 
 
@@ -346,7 +392,6 @@ class main(discord.Client):
 	#	Connect block
 	#
 ################################################# 
-	# TODO: Remove msg args, just server or channel
 	############################################
 	async def connect_voice_channel_by_author(self, msg):
 		if msg.author.voice_channel:
@@ -361,7 +406,6 @@ class main(discord.Client):
 		else:
 			await self.Error(8, msg) # 'Create such a channel first'
 	############################################
-	# TODO: Whats is faster to compare .channel or .channel.name :thinking:
 	async def connect_voice_channel(self, msg, channel):
 		if not self.is_voice_connected(msg.server):
 			await super().join_voice_channel(channel)
@@ -389,7 +433,7 @@ class main(discord.Client):
 			return True
 		else:
 			return False
-
+	############################################
 ################################################
 
 

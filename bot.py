@@ -81,9 +81,31 @@ class main(discord.Client):
 
 	############################################
 	#
-	#	On_Message block
+	#	Commands block
 	#
 ################################################
+	commands_arr = {
+		'hello' : 'cmd_hello',
+		'invite': 'cmd_invite',
+		################
+		'connect': 'cmd_connect',
+		'summon': 'cmd_connect',
+		'disconnect': 'cmd_disconnect',
+		'shutdown': 'cmd_shutdown',
+		################
+		'play': 'cmd_play',
+		################
+		'pause': 'cmd_pause',
+		'resume': 'cmd_resume',
+		'stop': 'cmd_stop',
+		'volume': 'cmd_volume',
+		'now': 'cmd_now',
+		################
+		'loop': 'cmd_loop',
+		################
+		'reload': 'cmd_reload',
+		}
+	############################################
 	async def cmd_hello(self, *args, **kwargs):
 		msg = kwargs.get('msg')
 		if msg.author.id == '193741119140528129':
@@ -210,9 +232,17 @@ class main(discord.Client):
 	async def cmd_loop(self, *args, **kwargs):
 		msg = kwargs.get('msg')
 	############################################
+################################################
+
+
+	############################################
+	#
+	#	On_Message block
+	#
+################################################
+	############################################
 	async def on_message(self, msg: discord.Message):
 		await super().wait_until_ready()
-		#================================================================================================#
 		if not msg.content:
 			return
 		elif msg.author == self.user:
@@ -223,48 +253,14 @@ class main(discord.Client):
 			mess_arr = msg.content[len(self.Prefix):].split()
 			cmd = mess_arr[0].lower()
 			args = mess_arr[1:]
+			if self.commands_arr.__contains__(cmd):
+				command = self.commands_arr.get(cmd)
+				await getattr(self, command)(*args, msg = msg)
+			else:
+				await self.Errors(17, msg) # 'No such command'
 		else:
 			return
-		#================================================================================================#
-		if cmd == 'hello':
-			await self.cmd_hello(*args, msg = msg)
-		#================================================================================================#	
-		elif cmd == 'connect':
-			await self.cmd_connect(*args, msg = msg)
-		#================================================================================================#
-		elif cmd == 'disconnect':
-			await self.cmd_disconnect(*args, msg = msg)
-		#================================================================================================#
-		elif cmd == 'shutdown':
-			await self.cmd_shutdown(*args, msg = msg)
-		#================================================================================================#
-		elif cmd == 'play':
-			await self.cmd_play(*args, msg = msg)
-		#================================================================================================#
-		elif cmd == 'stop':
-			await self.cmd_stop(*args, msg = msg)
-		#================================================================================================#
-		# TODO: Make music for reload
-		elif cmd == 'reload':
-			await self.cmd_reload(*args, msg = msg)
-		#================================================================================================#
-		elif cmd == 'volume':
-			await self.cmd_volume(*args, msg = msg)
-		#================================================================================================#
-		elif cmd == 'now':
-			await self.cmd_now(*args, msg = msg)
-		#================================================================================================#
-		elif cmd == 'pause':
-			await self.cmd_pause(*args, msg = msg)
-		#================================================================================================#
-		elif cmd == 'resume':
-			await self.cmd_resume(*args, msg = msg)
-		#================================================================================================#
-		elif cmd == 'loop':
-			await self.cmd_loop(*args, msg = msg)
-		elif cmd == 'invite':
-			await self.cmd_invite(*args, msg = msg)
-		#================================================================================================#
+	############################################
 ################################################
 
 
@@ -274,7 +270,7 @@ class main(discord.Client):
 	#
 ################################################
 	# TODO: Same succes message system
-	async def Error(self,error_id,msg):
+	async def Error(self, error_id, msg):
 		Errors = {
 			'1': 'You\'re not on the voice channel',
 			'2': 'I`m already homeless :(',
@@ -292,7 +288,7 @@ class main(discord.Client):
 			'14': 'The song is already playing, dont you hear?',
 			'15': 'The song is already paused, dont you hear this quality silence?',
 			'16': 'Is there life below 0?',
-			'17': 'I cant join this channel',
+			'17': 'No such command',
 			'18': 'I\'m already with you, my blind kitten, MEOW!',
 			}
 		try:
@@ -334,7 +330,7 @@ class main(discord.Client):
 	async def timer(self, msg):
 		message = 'Your song starts in: 10'
 		curr_msg = await self.send_message(msg.channel, message)
-		for i in range (1,10):
+		for i in range (1, 10):
 			await asyncio.sleep(1)
 			message = 'Your song starts in: {}'.format(10-i)
 			await self.edit_message(curr_msg, message)

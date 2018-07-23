@@ -129,9 +129,86 @@ class main(discord.Client):
 				await self.Error(5, msg) # 'Not valid link'
 		else:
 			await self.Error(12, msg) # 'Enter this f*&*ing song url here. Don\'t make me nervous, you mongol kid.'
-		
-
-
+	############################################
+	async def cmd_stop(self, *args, **kwargs):
+		msg = kwargs.get('msg')
+		if self.curr_song:
+			self.curr_song.stop()
+			self.curr_song = None
+		else:
+			await self.Error(4, msg) # 'Nothing is being played'
+	############################################
+	async def cmd_reload(self, *args, **kwargs):
+		msg = kwargs.get('msg')
+		await self.leave_voice_by_server(msg)
+		os.system('cls')
+		print('Don`t look there stranger! I`m fucking changi..ahem..reloading, meow!! ')
+		print('------')
+		await self.send_file(msg.channel, 'content\\reload.png')
+		os.execl(sys.executable, 'python', 'bot.py', *sys.argv[1:])
+	############################################
+	# TODO: Check param method
+	async def cmd_volume(self, *args, **kwargs):
+		msg = kwargs.get('msg')
+		if args:
+			try:
+				v = float(args[0])
+			except Exception:
+				await self.Error(7, msg) # 'Not valid volume value'
+			else: 
+				if v > 2:
+					await self.Error(11, msg) # 'RIP ears'
+					v = 2
+				elif v < 0:
+					await self.Error(16, msg) # 'Is there life below 0?'
+					v = 0
+				self.Volume = v
+				if self.curr_song:
+					self.curr_song.volume = v
+		else:
+			await self.Error(10, msg) # 'Invalid params, just like you'
+	############################################
+	async def cmd_now(self, *args, **kwargs):
+		msg = kwargs.get('msg')
+		if self.curr_song:
+			minutes = self.curr_song.duration // 60
+			seconds = self.curr_song.duration % 60
+			message = 'Now plaing:\n\t"{}"\t({}:{}).\nUploaded by:\n\t"{}"\nUrl:\n\t{}'
+			message = message.format(self.curr_song.title, minutes, seconds, self.curr_song.uploader, self.curr_song.url)
+			await self.send_message(msg.channel, message)
+		else:
+			await self.Error(4, msg) # 'Nothing is being played'
+	############################################
+	async def cmd_pause(self, *args, **kwargs):
+		msg = kwargs.get('msg')
+		if self.curr_song:
+			if self.curr_song.is_done():
+				await self.Error(13, msg) # 'Your song already ended'
+			elif not self.curr_song.is_playing():
+				await self.Error(15, msg) # 'The song is already paused, dont you hear this quality silence?'
+			else:
+				self.curr_song.pause()
+		else:
+			await self.Error(4, msg) # 'Nothing is being played'
+	############################################
+	async def cmd_resume(self, *args, **kwargs):
+		msg = kwargs.get('msg')
+		if self.curr_song:
+			if self.curr_song.is_done():
+				await self.Error(13, msg) # 'Your song already ended'
+			elif self.curr_song.is_playing():
+				await self.Error(14, msg) # 'The song is already playing, dont you hear?'
+			else:
+				self.curr_song.resume()
+		else:
+			await self.Error(4, msg) # 'Nothing is being played'
+	############################################
+	async def cmd_invite(self, *args, **kwargs):
+		msg = kwargs.get('msg')
+		await self.send_message(msg.channel, self.link)
+	############################################
+	async def cmd_loop(self, *args, **kwargs):
+		msg = kwargs.get('msg')
 	############################################
 	async def on_message(self, msg: discord.Message):
 		await super().wait_until_ready()
@@ -150,96 +227,43 @@ class main(discord.Client):
 			return
 		#================================================================================================#
 		if cmd == 'hello':
-			await self.cmd_hello(msg = msg)
+			await self.cmd_hello(*args, msg = msg)
 		#================================================================================================#	
 		elif cmd == 'connect':
-			await self.cmd_connect(*args, msg=msg)
+			await self.cmd_connect(*args, msg = msg)
 		#================================================================================================#
 		elif cmd == 'disconnect':
-			await self.cmd_disconnect(msg=msg)
+			await self.cmd_disconnect(*args, msg = msg)
 		#================================================================================================#
 		elif cmd == 'shutdown':
-			await self.cmd_shutdown(msg=msg)
-		#================================================================================================#	
+			await self.cmd_shutdown(*args, msg = msg)
+		#================================================================================================#
 		elif cmd == 'play':
-			
+			await self.cmd_play(*args, msg = msg)
 		#================================================================================================#
 		elif cmd == 'stop':
-			if self.curr_song:
-				self.curr_song.stop()
-				self.curr_song = None
-			else:
-				await self.Error(4, msg) # 'Nothing is being played'
+			await self.cmd_stop(*args, msg = msg)
 		#================================================================================================#
 		# TODO: Make music for reload
 		elif cmd == 'reload':
-			await self.leave_voice_by_server(msg)
-			os.system('cls')
-			# print('\n\n\n\n\n')
-			print('Don`t look there stranger! I`m fucking changi..ahem..reloading, meow!! ')
-			print('------')
-			await self.send_file(msg.channel, 'content\\reload.png')
-			os.execl(sys.executable, 'python', 'bot.py', *sys.argv[1:])
+			await self.cmd_reload(*args, msg = msg)
 		#================================================================================================#
-		elif cmd == 'cl':
-			os.system('cls')
-		#================================================================================================#
-		# TODO: Fix volume. So max value is 2.0
 		elif cmd == 'volume':
-			if len(args) == 1:
-				try:
-					v = float(args[0])
-				except Exception as e:
-					await self.Error(7, msg)
-				else:
-					if v > 2:
-						await self.Error(11, msg) # 'RIP ears'
-						v = 2
-					elif v < 0:
-						await self.Error(16, msg) # 'Is there life below 0?'
-						v = 0
-					self.Volume = v
-					if self.curr_song is not None:
-						self.curr_song.volume = v
-			else:
-				await self.Error(10, msg) # 'Invalid params, just like you'
+			await self.cmd_volume(*args, msg = msg)
 		#================================================================================================#
 		elif cmd == 'now':
-			if self.curr_song:
-				minutes = self.curr_song.duration // 60
-				seconds = self.curr_song.duration % 60
-				message = 'Now plaing:\n\t"{}"\t({}:{}).\nUploaded by:\n\t"{}"\nUrl:\n\t{}'
-				message = message.format(self.curr_song.title, minutes, seconds, self.curr_song.uploader, self.curr_song.url)
-				await self.send_message(msg.channel, message)
-			else:
-				await self.Error(4, msg) # 'Nothing is being played'
+			await self.cmd_now(*args, msg = msg)
 		#================================================================================================#
 		elif cmd == 'pause':
-			if self.curr_song:
-				if self.curr_song.is_done():
-					await self.Error(13, msg) # 'Your song already ended'
-				elif not self.curr_song.is_playing():
-					await self.Error(15, msg) # 'The song is already paused, dont you hear this quality silence?'
-				else:
-					self.curr_song.pause()
-			else:
-				await self.Error(4, msg) # 'Nothing is being played'
+			await self.cmd_pause(*args, msg = msg)
 		#================================================================================================#
 		elif cmd == 'resume':
-			if self.curr_song:
-				if self.curr_song.is_done():
-					await self.Error(13, msg) # 'Your song already ended'
-				elif self.curr_song.is_playing():
-					await self.Error(14, msg) # 'The song is already playing, dont you hear?'
-				else:
-					self.curr_song.resume()
-			else:
-				await self.Error(4, msg) # 'Nothing is being played'
+			await self.cmd_resume(*args, msg = msg)
 		#================================================================================================#
 		elif cmd == 'loop':
-			pass
+			await self.cmd_loop(*args, msg = msg)
 		elif cmd == 'invite':
-			await self.send_message(msg.channel, self.link)
+			await self.cmd_invite(*args, msg = msg)
 		#================================================================================================#
 ################################################
 
@@ -302,7 +326,7 @@ class main(discord.Client):
 	async def start_solo_song(self,msg):
 		if self.curr_song:
 			self.curr_song.stop()
-		self.curr_song = await self._get_voice_client(msg.server).create_ytdl_player(msg.content.split()[1])
+		self.curr_song = await super().voice_client_in(msg.server).create_ytdl_player(msg.content.split()[1])
 		self.curr_song.volume = self.Volume
 		#await self.timer(msg)
 		self.curr_song.start()

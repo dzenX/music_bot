@@ -10,22 +10,5 @@ Prefix: "!"
 # Please enter here the Role a User need for the Admin Commands [String]
 AdminRole: "DJ"
 
-# Enable Sites to use songs from. Split them by ; Example (http://youtube.com/;https://soundcloud.com/) [String]
-# Leave it empty to allow every site!
-AllowedSites: ""
-
-# If you want that your bot restarts on a crash then set this to True! [True/False]
-AutoReconnect: True
-
 # Base Volume; Here you can change the default Base Volume! [Float]
 Volume: 0.1
-
-###################
-# Autojoin System #
-###################
-
-# Activate the Autojoin Feature (Instable) [True/False]
-Autojoin: False
-
-# Set the ID of the Voice Channel to use Autojoin[String/ID]
-AutojoinChannel: "000000000000000"

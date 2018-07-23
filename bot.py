@@ -102,17 +102,36 @@ class main(discord.Client):
 	############################################
 	async def cmd_disconnect(self, *args, **kwargs):
 		msg = kwargs.get('msg')
-		if self.is_voice_connected(msg.server):
-			await self.voiceClient.disconnect()
-		else:
+		leaved = await self.leave_voice_by_server(msg)
+		if not leaved:
 			await self.Error(2, msg) # 'I`m already homeless :('
 	############################################
 	async def cmd_shutdown(self, *args, **kwargs):
 		msg = kwargs.get('msg')
-		if self.is_voice_connected(msg.server):
-			await self.voiceClient.disconnect()
+		await self.leave_voice_by_server(msg)
 		await self.send_file(msg.channel, 'content\\shutdown.jpg')
 		exit(0)
+	############################################
+	async def cmd_play(self, *args, **kwargs):
+		msg = kwargs.get('msg')
+		if args:
+			url = args[0]
+			if self.is_youtube_link(url):
+				if not self.is_youtube_list(url):
+					if self.is_voice_connected(msg.server):
+						await self.start_solo_song(msg)	
+					else:
+						await self.connect_voice_channel_by_author(msg)
+						await self.start_solo_song(msg)	
+				else:
+					await self.Error(6, msg) # 'It`s not a single song!'
+			else:
+				await self.Error(5, msg) # 'Not valid link'
+		else:
+			await self.Error(12, msg) # 'Enter this f*&*ing song url here. Don\'t make me nervous, you mongol kid.'
+		
+
+
 	############################################
 	async def on_message(self, msg: discord.Message):
 		await super().wait_until_ready()
@@ -143,21 +162,7 @@ class main(discord.Client):
 			await self.cmd_shutdown(msg=msg)
 		#================================================================================================#	
 		elif cmd == 'play':
-			if len(args) >= 1:
-				url = args[0]
-				if self.is_youtube_link(url):
-					if not self.is_youtube_list(url):
-						if self.is_voice_connected(msg.server):
-							await self.start_solo_song(msg)	
-						else:
-							await self.connect_voice_channel_by_author(msg)
-							await self.start_solo_song(msg)	
-					else:
-						await self.Error(6, msg) # 'It`s not a single song!'
-				else:
-					await self.Error(5, msg) # 'Not valid link'
-			else:
-				await self.Error(12, msg) # 'Enter this f*&*ing song url here. Don\'t make me nervous, you mongol kid.'
+			
 		#================================================================================================#
 		elif cmd == 'stop':
 			if self.curr_song:
@@ -168,8 +173,7 @@ class main(discord.Client):
 		#================================================================================================#
 		# TODO: Make music for reload
 		elif cmd == 'reload':
-			if self.is_voice_connected(msg.server):
-				await self.voiceClient.disconnect()
+			await self.leave_voice_by_server(msg)
 			os.system('cls')
 			# print('\n\n\n\n\n')
 			print('Don`t look there stranger! I`m fucking changi..ahem..reloading, meow!! ')
@@ -298,9 +302,9 @@ class main(discord.Client):
 	async def start_solo_song(self,msg):
 		if self.curr_song:
 			self.curr_song.stop()
-		self.curr_song = await self.voiceClient.create_ytdl_player(msg.content.split()[1], ytdl_options = ytdl_format_options)
+		self.curr_song = await self._get_voice_client(msg.server).create_ytdl_player(msg.content.split()[1])
 		self.curr_song.volume = self.Volume
-		await self.timer(msg)
+		#await self.timer(msg)
 		self.curr_song.start()
 	############################################
 	async def timer(self, msg):
@@ -322,7 +326,7 @@ class main(discord.Client):
 	#	Connect block
 	#
 ################################################# 
-# TODO: Remove msg args, just server or channel
+	# TODO: Remove msg args, just server or channel
 	############################################
 	async def connect_voice_channel_by_author(self, msg):
 		if msg.author.voice_channel:
@@ -330,7 +334,6 @@ class main(discord.Client):
 		else:
 			await self.Error(1, msg) # 'You\'re not on the voice channel'
 	############################################
-	
 	async def connect_voice_channel_by_name(self, msg, channel_name):
 		channel = self.find_voice_channel_by_name(msg.server, channel_name)
 		if channel:
@@ -341,11 +344,13 @@ class main(discord.Client):
 	# TODO: Whats is faster to compare .channel or .channel.name :thinking:
 	async def connect_voice_channel(self, msg, channel):
 		if not self.is_voice_connected(msg.server):
-			self.voiceClient = await super().join_voice_channel(channel)
+			await super().join_voice_channel(channel)
 			print('Joined channel: \'{}\'. On server: \'{}\'.'.format(channel, channel.server))
 		else:
-			if not self.voiceClient.channel == channel:
-				await self.voiceClient.move_to(channel)
+			voiceClient  = super().voice_client_in(msg.server)
+			if not voiceClient.channel == channel:
+				await voiceClient.move_to(channel)
+				print('Moved to channel: \'{}\'. On server: \'{}\'.'.format(channel, channel.server))
 			else:
 				await self.Error(18, msg) # 'I\'m already with you, my blind kitten, MEOW!'
 	############################################
@@ -355,6 +360,16 @@ class main(discord.Client):
 				return channel
 		print('No such channel: \'{}\' on server: \'{}\''.format(channel_name, server))
 		return None
+	############################################
+	async def leave_voice_by_server(self, msg):
+		if self.is_voice_connected(msg.server):
+			voiceClient = super().voice_client_in(msg.server)
+			print('Disconnected from channel: \'{}\'. On server: \'{}\'.'.format(voiceClient.channel, msg.server))
+			await voiceClient.disconnect()
+			return True
+		else:
+			return False
+
 ################################################
 
 

@@ -2,7 +2,7 @@
 Token: ""
 
 # Enter here the Opus File, On Windows its libopus-0.x86.dll or libopus-0.x64.dll on Linux it is usally libopus.so.0 [String]
-Opusfile: "libopus-0.x86.dll"
+OpusFile: "libopus-0.x86.dll"
 
 # Set the Prefix of the Bot [String]
 Prefix: "!"
@@ -16,3 +16,5 @@ Volume: 0.1
 SettingsFolder: "settings"
 
 TokenFile: "my.token"
+
+InviteLink: "https://discordapp.com/oauth2/authorize?client_id=462304443954888724&scope=bot"

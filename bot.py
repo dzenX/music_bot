@@ -118,8 +118,7 @@ class main(discord.Client):
 		'reload': 'cmd_reload',
 		'rel': 'cmd_reload',
 		'relaod': 'cmd_reload',
-		't': 'cmd_test1',
-		'tt': 'cmd_test2',
+		't': 'cmd_test',
 		################
 		}
 	############################################
@@ -202,43 +201,47 @@ class main(discord.Client):
 					await self.Error(16, msg) # 'Is there life below 0?'
 					v = 0
 				self.Volume = v
-				if self.curr_song:
-					self.curr_song.volume = v
+				player = await self.get_server_player(msg)
+				if player:
+					player.volume = v
 		else:
 			await self.Error(10, msg) # 'Invalid params, just like you'
 	############################################
 	async def cmd_now(self, *args, **kwargs):
 		msg = kwargs.get('msg')
-		if self.curr_song:
-			minutes = self.curr_song.duration // 60
-			seconds = self.curr_song.duration % 60
+		player = await self.get_server_player(msg)
+		if player:
+			minutes = player.duration // 60
+			seconds = player.duration % 60
 			message = 'Now plaing:\n\t"{}"\t({}:{}).\nUploaded by:\n\t"{}"\nUrl:\n\t{}'
-			message = message.format(self.curr_song.title, minutes, seconds, self.curr_song.uploader, self.curr_song.url)
+			message = message.format(player.title, minutes, seconds, player.uploader, player.url)
 			await self.send_message(msg.channel, message)
 		else:
 			await self.Error(4, msg) # 'Nothing is being played'
 	############################################
 	async def cmd_pause(self, *args, **kwargs):
 		msg = kwargs.get('msg')
-		if self.curr_song:
-			if self.curr_song.is_done():
+		player = await self.get_server_player(msg)
+		if player:
+			if player.is_done():
 				await self.Error(13, msg) # 'Your song already ended'
-			elif not self.curr_song.is_playing():
+			elif not player.is_playing():
 				await self.Error(15, msg) # 'The song is already paused, dont you hear this quality silence?'
 			else:
-				self.curr_song.pause()
+				player.pause()
 		else:
 			await self.Error(4, msg) # 'Nothing is being played'
 	############################################
 	async def cmd_resume(self, *args, **kwargs):
 		msg = kwargs.get('msg')
-		if self.curr_song:
-			if self.curr_song.is_done():
+		player = await self.get_server_player(msg)
+		if player:
+			if player.is_done():
 				await self.Error(13, msg) # 'Your song already ended'
-			elif self.curr_song.is_playing():
+			elif player.is_playing():
 				await self.Error(14, msg) # 'The song is already playing, dont you hear?'
 			else:
-				self.curr_song.resume()
+				player.resume()
 		else:
 			await self.Error(4, msg) # 'Nothing is being played'
 	############################################
@@ -275,8 +278,6 @@ class main(discord.Client):
 				await getattr(self, command)(*args, msg = msg)
 			else:
 				await self.Error(17, msg) # 'No such command'
-		else:
-			return
 	############################################
 ################################################
 
@@ -338,19 +339,20 @@ class main(discord.Client):
 	#	Play block
 	#
 ################################################
-	players:{}
+	players = {}
 	################################################
-	async def cmd_test1(self, *args, **kwargs):
+	async def cmd_test(self, *args, **kwargs):
+		msg = kwargs.get('msg')
 		print('--------')
 		print('[TEST1]')
+		for arg in args:
+			print(arg)
 		print('--------')
-	async def cmd_test2(self, *args, **kwargs):
-		print('--------')
-		print('[TEST2]')
-		print('--------')
+	############################################
 	async def get_server_player(self, msg):
 		if self.players.__contains__(msg.server.id):
-			return players.get(msg.server.id)
+			return self.players.get(msg.server.id)
+	############################################
 	async def start_new_player(self, msg, url):
 		try:
 			player = await super().voice_client_in(msg.server).create_ytdl_player(url)
@@ -358,19 +360,20 @@ class main(discord.Client):
 			print(e)
 		else:
 			return player
+	############################################
 	async def add_player_to_list(self, msg, player):
 		self.players[msg.server.id] = player
+	############################################
 	async def remove_player(self, msg):
-		player = players.pop(msg.server.id, None)
+		player = self.players.pop(msg.server.id, None)
 		return player
 	############################################
 	async def start_solo_song(self, msg, url):
-		if self.curr_song:
-			self.curr_song.stop()
-		self.curr_song = await super().voice_client_in(msg.server).create_ytdl_player(url)
-		self.curr_song.volume = self.Volume
+		player = await self.start_new_player(msg, url)
+		player.volume = self.Volume
+		await self.add_player_to_list(msg, player)
 		#await self.timer(msg)
-		self.curr_song.start()
+		player.start()
 	############################################
 	async def timer(self, msg):
 		message = 'Your song starts in: 10'
@@ -409,12 +412,12 @@ class main(discord.Client):
 	async def connect_voice_channel(self, msg, channel):
 		if not self.is_voice_connected(msg.server):
 			await super().join_voice_channel(channel)
-			print('Joined channel: \'{}\'. On server: \'{}\'.'.format(channel, channel.server))
+			print('[INFO] Joined channel: \'{}\'. On server: \'{}\'.'.format(channel, channel.server))
 		else:
 			voiceClient  = super().voice_client_in(msg.server)
 			if not voiceClient.channel == channel:
 				await voiceClient.move_to(channel)
-				print('Moved to channel: \'{}\'. On server: \'{}\'.'.format(channel, channel.server))
+				print('[INFO] Moved to channel: \'{}\'. On server: \'{}\'.'.format(channel, channel.server))
 			else:
 				await self.Error(18, msg) # 'I\'m already with you, my blind kitten, MEOW!'
 	############################################
@@ -422,13 +425,13 @@ class main(discord.Client):
 		for channel in server.channels:
 			if str(channel.type) == "voice" and channel.name.lower() == channel_name.lower():
 				return channel
-		print('No such channel: \'{}\' on server: \'{}\''.format(channel_name, server))
+		print('[ERROR] No such channel: \'{}\' on server: \'{}\''.format(channel_name, server))
 		return None
 	############################################
 	async def leave_voice_by_server(self, msg):
 		if self.is_voice_connected(msg.server):
 			voiceClient = super().voice_client_in(msg.server)
-			print('Disconnected from channel: \'{}\'. On server: \'{}\'.'.format(voiceClient.channel, msg.server))
+			print('[INFO] Disconnected from channel: \'{}\'. On server: \'{}\'.'.format(voiceClient.channel, msg.server))
 			await voiceClient.disconnect()
 			return True
 		else:

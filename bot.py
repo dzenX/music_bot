@@ -38,29 +38,56 @@ class main(discord.Client):
 		super().__init__()
 		self.curr_song = None
 		self.link = 'https://discordapp.com/oauth2/authorize?client_id=462304443954888724&scope=bot'
-		self.__load_cfg()
-		self._load_opus()
+		self.__load_defaults()
+		self.__load_opus()
+		self.__load_token()
+		self.__load_settings()
 		self.__start_bot(self.token)
 	############################################
-	def __load_cfg(self):
+	def __load_defaults(self):
+		print('[INFO] Loading default settings')
 		with open('config.yml', 'r') as file:
 			self.cfg = yaml.load(file)
 			self.Prefix = self.cfg['Prefix']
 			self.Volume = self.cfg['Volume']
 			self.settings_path = self.cfg['SettingsFolder'] + '/'
-		if os.path.isfile('my.token'):
-			with open('my.token', 'r') as file:
+			self.token_file = self.cfg['TokenFile']
+		print('[INFO] Defaults succesfully loaded')
+		print('------')
+	############################################
+	def __load_token(self):
+		print('[INFO] Trying to load token')
+		if os.path.isfile(self.token_file):
+			with open(self.token_file, 'r') as file:
 				self.token = file.read()
+			print('[INFO] Token succesfully loaded')
 		else:
-			print("Please enter your discord account token (bot a bot account token!):")
+			print("Please enter your bot token:")
 			token = input()
+			print('------')
 			print("[INFO] Saving token...")
-			with open("my.token", "w") as f:
+			with open(self.token_file, "w") as f:
 				f.write(token)
 			print("[INFO] Starting up and logging in...")
-
+		print('------')
 	############################################
-	def _load_opus(self):
+	def __load_settings(self):
+		print('[INFO] Trying to load saved settings')
+		if not os.path.isdir(self.settings_path):
+			os.makedirs(self.settings_path)
+			print('[WARN] No saved settings directory found, so ill create it')
+		else:
+			print('[INFO] Loading settings from files')
+			files = os.listdir(self.settings_path)
+			files = filter(lambda x: x.endswith('.yml'), files)
+			if not list(files):
+				print('[WARN] No saved settings found in default directory')
+			else:
+				self._load_settings_from_files(files)
+				print('[INFO] Settings succesfully loaded')
+		print('------')
+	############################################
+	def __load_opus(self):
 		print('[INFO] Trying to load OpusLib:')
 		if not discord.opus.is_loaded():
 			discord.opus.load_opus(self.cfg['Opusfile'])
@@ -74,6 +101,11 @@ class main(discord.Client):
 		else:
 			print("[INFO] Opus already loaded!")
 			print('------')
+	############################################
+	def _load_settings_from_files(self, files):
+		for file in files:
+			with open(self.settings_path + file, 'r'):
+				self.add_cfg_to_list(yaml.load(f))
 	############################################
 	def __start_bot(self,token,**kwargs):
 		self.loop.run_until_complete(self.start(token, **kwargs))
@@ -352,32 +384,46 @@ class main(discord.Client):
 
 	############################################
 	#
-	#	Utils Block
+	#	Settings Block
 	#
 ################################################
 	settings = {}
 	############################################
-	def save_settings(self, msg, **kwargs):
-		file = self.settings_path + '{}.yml'.format(msg.server.id)
+	def add_cfg_to_list(self, cfg, server_id):
+		self.settings[server_id] = cfg
+		if not cfg :
+			print('[WARN] cfg for sever: \'{}\' are empty'.format(server_id))
+	############################################
+	############################################
+	def save_settings_to_file(self, server, **kwargs):
+		file = self.settings_path + '{}.yml'.format(server.id)
 		mode = 'r' if os.path.isfile(file) else 'w+'
 		with open(file, mode) as f:
 			cfg = yaml.load(f)
 		if not cfg:
 			cfg  = {}
-		print('[INFO] Updating settings for server: \'{}\''.format(msg.server))
+		print('[INFO] Updating settings for server: \'{}\''.format(server))
 		print('[INFO] Params: {}'.format(kwargs))
 		cfg.update(kwargs)
 		with open(file, 'w') as f:
 			yaml.dump(cfg, f, default_flow_style=False)
 	############################################
-	def get_settings(self, msg):
-		file = self.settings_path + '{}.yml'.format(msg.server.id)
+	def get_settings_from_file(self, server_id):
+		file = self.settings_path + '{}.yml'.format(server_id)
 		if os.path.isfile(file):
 			with open(file, 'r') as f:
 				cfg = yaml.load(f)
 			return cfg
-	def reset_settings(self, msg):
-		file = self.settings_path + '{}.yml'.format(msg.server.id)
+	############################################
+	def get_settings_attr_from_file(self, server_id, attr):
+		cfg = self.get_settings(server_id)
+		if cfg:
+			return cfg[attr]
+		else:
+			return getattr(self, attr)
+	############################################
+	def reset_settings_from_file(self, server_id):
+		file = self.settings_path + '{}.yml'.format(server_id)
 		self.silent_remove(file)
 	############################################
 	def silent_remove(self, filename):

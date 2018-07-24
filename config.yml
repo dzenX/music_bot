@@ -14,3 +14,5 @@ AdminRole: "DJ"
 Volume: 0.1
 
 SettingsFolder: "settings"
+
+TokenFile: "my.token"

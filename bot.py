@@ -47,6 +47,7 @@ class main(discord.Client):
 			self.cfg = yaml.load(file)
 			self.Prefix = self.cfg['Prefix']
 			self.Volume = self.cfg['Volume']
+			self.settings_path = self.cfg['SettingsFolder'] + '/'
 		if os.path.isfile('my.token'):
 			with open('my.token', 'r') as file:
 				self.token = file.read()
@@ -103,7 +104,8 @@ class main(discord.Client):
 		'disconnect': 'cmd_disconnect',
 		'gtfo': 'cmd_disconnect',
 		################
-		'shutdown': 'cmd_shutdown',
+		'kys': 'cmd_shutdown',
+		#'shutdown': 'cmd_shutdown',
 		################
 		'play': 'cmd_play',
 		################
@@ -118,6 +120,7 @@ class main(discord.Client):
 		'reload': 'cmd_reload',
 		'rel': 'cmd_reload',
 		'relaod': 'cmd_reload',
+		'set': 'cmd_set_settings',
 		't': 'cmd_test',
 		################
 		}
@@ -170,9 +173,10 @@ class main(discord.Client):
 	############################################
 	async def cmd_stop(self, *args, **kwargs):
 		msg = kwargs.get('msg')
-		if self.curr_song:
-			self.curr_song.stop()
-			#self.curr_song = None
+		player = await self.get_server_player(msg)
+		if player:
+			player.stop()
+			#player = None
 		else:
 			await self.Error(4, msg) # 'Nothing is being played'
 	############################################
@@ -252,6 +256,14 @@ class main(discord.Client):
 	async def cmd_loop(self, *args, **kwargs):
 		msg = kwargs.get('msg')
 	############################################
+	# TODO: Make it userfriendly
+	async def cmd_set_settings(self, *args, **kwargs):
+		msg = kwargs.get('msg')
+		cfg = {}
+		for arg in args:
+			cfg.update(self.get_dict(*arg.split(':')))
+		self.save_settings(cfg, msg = msg)
+	############################################
 ################################################
 
 
@@ -271,13 +283,17 @@ class main(discord.Client):
 		elif msg.content.startswith(self.Prefix):
 			await self.chat_log(msg)
 			mess_arr = msg.content[len(self.Prefix):].split()
-			cmd = mess_arr[0].lower()
-			args = mess_arr[1:]
-			if self.commands_arr.__contains__(cmd):
-				command = self.commands_arr.get(cmd)
-				await getattr(self, command)(*args, msg = msg)
+			if mess_arr:
+				cmd = mess_arr[0].lower()
+				args = mess_arr[1:]
+				if self.commands_arr.__contains__(cmd):
+					command = self.commands_arr.get(cmd)
+					await getattr(self, command)(*args, msg = msg)
+				else:
+					await self.Error(17, msg) # 'No such command'
 			else:
-				await self.Error(17, msg) # 'No such command'
+				await self.Error(19,msg) # 'What are you hesitant.. Command me dont be a p&&sy, Meow!'
+
 	############################################
 ################################################
 
@@ -309,6 +325,7 @@ class main(discord.Client):
 			'16': 'Is there life below 0?',
 			'17': 'No such command',
 			'18': 'I\'m already with you, my blind kitten, MEOW!',
+			'19': 'What are you hesitant.. Command me dont be a p&&sy, Meow!',
 			}
 		try:
 			message = Errors[str(error_id)]
@@ -331,6 +348,34 @@ class main(discord.Client):
 		log = log.format(msg.timestamp, msg.server.name, msg.channel.name, msg.author.display_name, msg.content)
 		print(log)
 	############################################
+	def save_settings(self, msg, **kwargs):
+		file = self.settings_path + '{}.yml'.format(msg.server.id)
+		mode = 'r' if os.path.isfile(file) else 'w+'
+		with open(file, mode) as f:
+			cfg = yaml.load(f)
+		if not cfg:
+			cfg  = {}
+		print('[INFO] Updating settings for server: \'{}\''.format(msg.server))
+		print('[INFO] Params: {}'.format(kwargs))
+		cfg.update(kwargs)
+		with open(file, 'w') as f:
+			yaml.dump(cfg, f, default_flow_style=False)
+	############################################
+	def reset_settings(self, msg):
+		file = self.settings_path + '{}.yml'.format(msg.server.id)
+		self.silent_remove(file)
+	############################################
+	def silent_remove(self, filename):
+		try:
+			os.remove(filename)
+		except OSError:
+			pass
+	############################################
+	def get_dict(self, key, value):
+		dic = {}
+		dic[key] = value
+		return dic
+	############################################	
 ################################################
 
 
@@ -340,13 +385,17 @@ class main(discord.Client):
 	#
 ################################################
 	players = {}
+
 	################################################
 	async def cmd_test(self, *args, **kwargs):
 		msg = kwargs.get('msg')
 		print('--------')
 		print('[TEST1]')
-		for arg in args:
-			print(arg)
+		
+		self.save_settings(msg, Volume = 0.3, AdminRole = 'DJ')
+		print('saved')
+		self.reset_settings(msg)
+		print('delete')
 		print('--------')
 	############################################
 	async def get_server_player(self, msg):

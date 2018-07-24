@@ -1,5 +1,6 @@
 *.token
 *.sublime*
+settings/
 Thumbs.db
 
 # Byte-compiled / optimized / DLL files

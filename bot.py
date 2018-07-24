@@ -348,6 +348,15 @@ class main(discord.Client):
 		log = log.format(msg.timestamp, msg.server.name, msg.channel.name, msg.author.display_name, msg.content)
 		print(log)
 	############################################
+################################################
+
+	############################################
+	#
+	#	Utils Block
+	#
+################################################
+	settings = {}
+	############################################
 	def save_settings(self, msg, **kwargs):
 		file = self.settings_path + '{}.yml'.format(msg.server.id)
 		mode = 'r' if os.path.isfile(file) else 'w+'
@@ -361,6 +370,12 @@ class main(discord.Client):
 		with open(file, 'w') as f:
 			yaml.dump(cfg, f, default_flow_style=False)
 	############################################
+	def get_settings(self, msg):
+		file = self.settings_path + '{}.yml'.format(msg.server.id)
+		if os.path.isfile(file):
+			with open(file, 'r') as f:
+				cfg = yaml.load(f)
+			return cfg
 	def reset_settings(self, msg):
 		file = self.settings_path + '{}.yml'.format(msg.server.id)
 		self.silent_remove(file)
@@ -375,17 +390,6 @@ class main(discord.Client):
 		dic = {}
 		dic[key] = value
 		return dic
-	############################################	
-################################################
-
-
-	############################################
-	#
-	#	Play block
-	#
-################################################
-	players = {}
-
 	################################################
 	async def cmd_test(self, *args, **kwargs):
 		msg = kwargs.get('msg')
@@ -397,6 +401,16 @@ class main(discord.Client):
 		self.reset_settings(msg)
 		print('delete')
 		print('--------')
+	############################################	
+################################################
+
+
+	############################################
+	#
+	#	Play block
+	#
+################################################
+	players = {}
 	############################################
 	async def get_server_player(self, msg):
 		if self.players.__contains__(msg.server.id):

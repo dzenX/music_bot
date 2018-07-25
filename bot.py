@@ -20,11 +20,17 @@ ytdl_format_options = {
 #	'logtostderr': False,
 #	'quiet': True,
 	'verbose': False,
-#	'no_WARNINGings': True,
+#	'no_warnings': True,
 	'default_search': 'auto',
 	'source_address': '0.0.0.0',
 }
 
+
+# import atexit
+
+# @atexit.register
+# def goodbye():
+# 	main.save_setting_to_files(main)
 
 class main(discord.Client):
 
@@ -52,7 +58,6 @@ class main(discord.Client):
 		'AdminRole':'DJ',
 		'ConfigFile': 'config.yml',
 	}
-	settings = {}
 	def __load_defaults(self):
 		print('[INFO] Loading default settings')
 		mode = 'r' if os.path.isfile(self.Defaults['ConfigFile']) else 'w+'
@@ -172,7 +177,11 @@ class main(discord.Client):
 		'reload': 'cmd_reload',
 		'rel': 'cmd_reload',
 		'relaod': 'cmd_reload',
+		################
 		'set': 'cmd_set_settings',
+		'settings': 'cmd_show_settings',
+		'reset': 'cmd_reset_settings',
+		################
 		't': 'cmd_test',
 		################
 		}
@@ -225,10 +234,9 @@ class main(discord.Client):
 	############################################
 	async def cmd_stop(self, *args, **kwargs):
 		msg = kwargs.get('msg')
-		player = await self.get_server_player(msg)
+		player = await self.get_server_player(msg.server.id)
 		if player:
 			player.stop()
-			#player = None
 		else:
 			await self.Error(4, msg) # 'Nothing is being played'
 	############################################
@@ -257,8 +265,7 @@ class main(discord.Client):
 					await self.Error(16, msg) # 'Is there life below 0?'
 					v = 0
 				self.set_attributes(msg.server.id, Volume = v)
-				#self.Volume = v
-				player = await self.get_server_player(msg)
+				player = await self.get_server_player(msg.server.id)
 				if player:
 					player.volume = v
 		else:
@@ -266,7 +273,7 @@ class main(discord.Client):
 	############################################
 	async def cmd_now(self, *args, **kwargs):
 		msg = kwargs.get('msg')
-		player = await self.get_server_player(msg)
+		player = await self.get_server_player(msg.server.id)
 		if player:
 			minutes = player.duration // 60
 			seconds = player.duration % 60
@@ -278,7 +285,7 @@ class main(discord.Client):
 	############################################
 	async def cmd_pause(self, *args, **kwargs):
 		msg = kwargs.get('msg')
-		player = await self.get_server_player(msg)
+		player = await self.get_server_player(msg.server.id)
 		if player:
 			if player.is_done():
 				await self.Error(13, msg) # 'Your song already ended'
@@ -291,7 +298,7 @@ class main(discord.Client):
 	############################################
 	async def cmd_resume(self, *args, **kwargs):
 		msg = kwargs.get('msg')
-		player = await self.get_server_player(msg)
+		player = await self.get_server_player(msg.server.id)
 		if player:
 			if player.is_done():
 				await self.Error(13, msg) # 'Your song already ended'
@@ -310,7 +317,7 @@ class main(discord.Client):
 			await Errors(20, msg) # 'No invite link was provided'
 	############################################
 	async def cmd_loop(self, *args, **kwargs):
-		msg = kwargs.get('msg')
+		pass
 	############################################
 	# TODO: Make it userfriendly
 	async def cmd_set_settings(self, *args, **kwargs):
@@ -318,7 +325,19 @@ class main(discord.Client):
 		cfg = {}
 		for arg in args:
 			cfg.update(self.get_dict(*arg.split(':')))
-		self.save_settings_to_file(msg.server, *cfg)
+		self.set_attributes(msg.server.id,**cfg)
+	############################################
+	async def cmd_reset_settings(self, *args, **kwargs):
+		msg = kwargs.get('msg')
+		self.reset_settings(msg.server.id)
+	############################################
+	async def cmd_show_settings(self, *args, **kwargs):
+		msg = kwargs.get('msg')
+		cfg = self.get_cfg_from_list(msg.server_id)
+		if not cfg:
+			await self.Errors(21, msg) # 'No setting saved for your server'
+		else: 
+			await self.send_message(msg.channal, cfg)
 	############################################
 
 
@@ -330,12 +349,13 @@ class main(discord.Client):
 		sid = msg.server.id
 		# cfg = {'gg': 'ez'}
 		# print(cfg)
-		print(self.settings)
-		print(self.get_cfg_from_file(sid))
+		print(self.Settings)
+		# print(self.get_cfg_from_file(sid))
+		#await self.send_message(msg.server.get_member('370641997238894602'), self.arts[0])
 		# self.add_cfg_to_list(sid,cfg)
-		# print(self.settings)
+		# print(self.Settings)
 		# self.set_attributes(sid, gg = 'wp', sht = 12)
-		# print(self.settings)
+		# print(self.Settings)
 		# print(self.get_cfg_from_list(sid))
 		# cf = self.get_cfg_from_list(sid)
 		# print('Set-----')
@@ -355,13 +375,12 @@ class main(discord.Client):
 	############################################
 	async def on_message(self, msg: discord.Message):
 		await super().wait_until_ready()
-		if not msg.content:
-			return
-		elif msg.author == self.user:
-			await self.chat_log(msg)
-			return
-		elif msg.content.startswith(self.Prefix):
-			await self.chat_log(msg)
+		# if not msg.content: 
+		# 	pass
+		# elif msg.author == self.user:
+		# 	await self.chat_log(msg)
+		if msg.content.startswith(self.Prefix) and not msg.author == self.user:
+			#await self.chat_log(msg)
 			mess_arr = msg.content[len(self.Prefix):].split()
 			if mess_arr:
 				cmd = mess_arr[0].lower()
@@ -407,21 +426,25 @@ class main(discord.Client):
 			'18': 'I\'m already with you, my blind kitten, MEOW!',
 			'19': 'What are you hesitant.. Command me dont be a p&&sy, Meow!',
 			'20': 'No invite link was provided',
+			'21': 'No setting saved for your server',
 			}
 		try:
 			message = Errors[str(error_id)]
-		except KeyError as e:
-			print('[Error] Undefined Error Key: {}'.format(e.args[0]))
+		except:
+			pass
+		# 	print('[Error] Undefined Error Key: {}'.format(e.args[0]))
 		else:
-			print('[Error] Code: {}. {}'.format(error_id,message))
+			#print('[Error] Code: {}. {}'.format(error_id,message))
 			await self.send_message(msg.channel, embed=discord.Embed(color=discord.Color.red(), description=(message)))
 			#await self.send_message(msg.channel, message)
 	############################################
-	def is_youtube_list(self,str):
-		return True if str.startswith('https://www.youtube.com/playlist?list=') or str.startswith('www.youtube.com/playlist?list=') else False
+	def is_youtube_list(self, url):
+		#return True if str.startswith('https://www.youtube.com/playlist?list=') or str.startswith('www.youtube.com/playlist?list=') else False
+		return True if 'list=' in url else False
 	############################################
-	def is_youtube_link(self,str):
-		return True if str.startswith('https://youtu.be/') or str.startswith('www.youtube.com/') or str.startswith('https://www.youtube.com/') else False
+	def is_youtube_link(self, url):
+		#return True if str.startswith('https://youtu.be/') or str.startswith('www.youtube.com/') or str.startswith('https://www.youtube.com/') else False
+		return True if 'youtu.be' or 'youtube.com' in url else False
 	############################################
 	# TODO: Log system
 	async def chat_log(self, msg):
@@ -436,22 +459,26 @@ class main(discord.Client):
 	#	Settings Block
 	#
 ################################################
-	
+	Settings = {}
 	############################################
 
 	# main part
 
 	############################################
 	def get_attr(self, server_id, attr):
-		cfg = get_cfg_from_list(server_id)
+		cfg = self.get_cfg_from_list(server_id)
 		return cfg.get(attr) if cfg else getattr(self, attr)
 	############################################
 	def set_attributes(self, server_id, **kwargs):
 		cfg = self.get_cfg_from_list(server_id)
-		if not cfg:
+		if not cfg: 
 			cfg = self.add_cfg_to_list(server_id, {})
 		cfg.update(kwargs)
 		self.save_cfg_to_file(server_id, cfg)
+	############################################
+	def reset_settings(self, server_id):
+		self.remove_cfg_from_list(server_id)
+		self.remove_settings_file(server_id)
 	############################################
 
 
@@ -461,14 +488,14 @@ class main(discord.Client):
 
 	############################################
 	def add_cfg_to_list(self, server_id, cfg):
-		self.settings.update(self.get_dict(server_id,cfg))
-		return self.settings.get(server_id)
+		self.Settings.update(self.get_dict(server_id,cfg))
+		return self.Settings.get(server_id)
 	############################################
-	# def remove_cfg_from_list(self, server_id):
-	# 	return True if self.settings.pop(server_id, None) else False
+	def remove_cfg_from_list(self, server_id):
+		return True if self.Settings.pop(server_id, None) else False
 	############################################
 	def get_cfg_from_list(self, server_id):
-		return self.settings.get(server_id, None)
+		return self.Settings.get(server_id)
 	############################################
 
 
@@ -476,24 +503,11 @@ class main(discord.Client):
 
 	# file control
 
-	############################################
-	# def save_settings_to_file(self, server, **kwargs):
-	# 	""" 
-	# 		Add custom settings to server config file
-	# 		self.save_settings_to_file(msg.server, Key1 = Val1, Key2 = 'Str1')
-	# 	"""
-	# 	file = self.SettingsFolder + '{}.yml'.format(server.id)
-	# 	mode = 'r' if os.path.isfile(file) else 'w+'
-	# 	with open(file, mode) as f:
-	# 		cfg = yaml.load(f)
-	# 	if not cfg:
-	# 		cfg  = {}
-	# 	print('[INFO] Updating settings for server: \'{}\''.format(server))
-	# 	print('[INFO] Params: {}'.format(kwargs))
-	# 	cfg.update(kwargs)
-	# 	with open(file, 'w') as f:
-	# 		yaml.dump(cfg, f, default_flow_style=False)
-	############################################
+	# ############################################
+	# def save_setting_to_files(self):
+	# 	for server_id, cfg in self.Settings.items():
+	# 		self.save_cfg_to_file(server_id, cfg)
+	# ############################################
 	def save_cfg_to_file(self, server_id, cfg):
 		file = self.SettingsFolder + '{}.yml'.format(server_id)
 		with open(file, 'w') as f:
@@ -506,8 +520,8 @@ class main(discord.Client):
 				cfg = yaml.load(f)
 			return cfg
 	############################################
-	# def remove_settings_file(self, server_id):
-	# 	self.silent_remove(self.SettingsFolder + '{}.yml'.format(server_id))
+	def remove_settings_file(self, server_id):
+		self.silent_remove(self.SettingsFolder + '{}.yml'.format(server_id))
 	############################################
 
 
@@ -523,9 +537,11 @@ class main(discord.Client):
 			pass
 	############################################
 	def get_dict(self, key, value):
-		dic = {}
-		dic[key] = value
-		return dic
+		try:
+			result = float(value)
+		except:
+			result = value
+		return dict([(key,result)])
 	############################################	
 ################################################
 
@@ -537,9 +553,8 @@ class main(discord.Client):
 ################################################
 	players = {}
 	############################################
-	async def get_server_player(self, msg):
-		if self.players.__contains__(msg.server.id):
-			return self.players.get(msg.server.id)
+	async def get_server_player(self, server_id):
+		return self.players.get(server_id)
 	############################################
 	async def start_new_player(self, msg, url):
 		try:
@@ -549,17 +564,16 @@ class main(discord.Client):
 		else:
 			return player
 	############################################
-	async def add_player_to_list(self, msg, player):
-		self.players[msg.server.id] = player
+	async def add_player_to_list(self, server_id, player):
+		self.players[server_id] = player
 	############################################
-	async def remove_player(self, msg):
-		player = self.players.pop(msg.server.id, None)
-		return player
+	async def remove_player(self, server_id):
+		self.players.pop(server_id, None)
 	############################################
 	async def start_solo_song(self, msg, url):
 		player = await self.start_new_player(msg, url)
 		player.volume = self.get_attr(msg.server.id,'Volume')
-		await self.add_player_to_list(msg, player)
+		await self.add_player_to_list(msg.server.id, player)
 		#await self.timer(msg)
 		player.start()
 	############################################
@@ -600,12 +614,12 @@ class main(discord.Client):
 	async def connect_voice_channel(self, msg, channel):
 		if not self.is_voice_connected(msg.server):
 			await super().join_voice_channel(channel)
-			print('[INFO] Joined channel: \'{}\'. On server: \'{}\'.'.format(channel, channel.server))
+			#print('[INFO] Joined channel: \'{}\'. On server: \'{}\'.'.format(channel, channel.server))
 		else:
 			voiceClient  = super().voice_client_in(msg.server)
 			if not voiceClient.channel == channel:
 				await voiceClient.move_to(channel)
-				print('[INFO] Moved to channel: \'{}\'. On server: \'{}\'.'.format(channel, channel.server))
+				#print('[INFO] Moved to channel: \'{}\'. On server: \'{}\'.'.format(channel, channel.server))
 			else:
 				await self.Error(18, msg) # 'I\'m already with you, my blind kitten, MEOW!'
 	############################################
@@ -613,18 +627,35 @@ class main(discord.Client):
 		for channel in server.channels:
 			if str(channel.type) == "voice" and channel.name.lower() == channel_name.lower():
 				return channel
-		print('[ERROR] No such channel: \'{}\' on server: \'{}\''.format(channel_name, server))
+		#print('[ERROR] No such channel: \'{}\' on server: \'{}\''.format(channel_name, server))
 		return None
 	############################################
 	async def leave_voice_by_server(self, msg):
 		if self.is_voice_connected(msg.server):
 			voiceClient = super().voice_client_in(msg.server)
-			print('[INFO] Disconnected from channel: \'{}\'. On server: \'{}\'.'.format(voiceClient.channel, msg.server))
+			#print('[INFO] Disconnected from channel: \'{}\'. On server: \'{}\'.'.format(voiceClient.channel, msg.server))
 			await voiceClient.disconnect()
 			return True
 		else:
 			return False
 	############################################
+	arts = [
+	"""
+░░░░▄███▓███████▓▓▓░░░░
+░░░███░░░▒▒▒██████▓▓░░░ 
+░░██░░░░░░▒▒▒██████▓▓░░
+░██▄▄▄▄░░░▄▄▄▄█████▓▓░░
+░██░(◐)░░░▒(◐)▒██████
+░██░░░░░░░▒▒▒▒▒█████▓▓░ 
+░██░░░▀▄▄▀▒▒▒▒▒█████▓▓░
+░█░███▄█▄█▄███░█▒████▓▓
+░█░███▀█▀█▀█░█▀▀▒█████▓
+░█░▀▄█▄█▄█▄▀▒▒▒▒█████▓░ 
+░████░░░░░░▒▓▓███████▓░ 
+░▓███▒▄▄▄▄▒▒▒▒████████░
+░▓▓██▒▓███████████████░
+	""",
+	]
 ################################################
 
 

@@ -335,7 +335,7 @@ class main(discord.Client):
 		msg = kwargs.get('msg')
 		cfg = self.get_cfg_from_list(msg.server_id)
 		if not cfg:
-			await self.Errors(21, msg) # 'No setting saved for your server'
+			await self.Error(21, msg) # 'No setting saved for your server'
 		else: 
 			await self.send_message(msg.channal, cfg)
 	############################################
@@ -347,9 +347,15 @@ class main(discord.Client):
 		print('--------')
 		print('[TEST]')
 		sid = msg.server.id
+		# try:
+		# 	player = await super().voice_client_in(msg.server).create_ytdl_player(args[0])
+		# except Exception as e:
+		# 	print('fdlkgjeifjahefihlfoewh;foawhef;kwahjf;klawhdflkahfdlk')
+		# else:
+		# 	player.start()
 		# cfg = {'gg': 'ez'}
 		# print(cfg)
-		print(self.Settings)
+		#print(self.Settings)
 		# print(self.get_cfg_from_file(sid))
 		#await self.send_message(msg.server.get_member('370641997238894602'), self.arts[0])
 		# self.add_cfg_to_list(sid,cfg)
@@ -428,14 +434,8 @@ class main(discord.Client):
 			'20': 'No invite link was provided',
 			'21': 'No setting saved for your server',
 			}
-		try:
-			message = Errors[str(error_id)]
-		except:
-			pass
-		# 	print('[Error] Undefined Error Key: {}'.format(e.args[0]))
-		else:
-			#print('[Error] Code: {}. {}'.format(error_id,message))
-			await self.send_message(msg.channel, embed=discord.Embed(color=discord.Color.red(), description=(message)))
+		message = Errors.get(str(error_id), 'Unknown error')
+		await self.send_message(msg.channel, embed=discord.Embed(color=discord.Color.red(), description=(message)))
 			#await self.send_message(msg.channel, message)
 	############################################
 	def is_youtube_list(self, url):

@@ -138,8 +138,9 @@ class main(discord.Client):
 		print('\t' + self.user.id)
 		await self.change_presence(game = discord.Game(name = "Blue Cat, Meow !!!"))
 		servers = "\n- ".join([s.name + " (" + s.id + ")" for s in self.servers])
-		prnt = "-----------------------------------\n    SYK Bot\n    discord.py version: {}\n    Running on servers:\n- {}\n-----------------------------------".format(discord.__version__, servers)
-		print(prnt)
+		prnt = "-----------------------------------\n    SYK Bot\n    discord.py version: {}\n    "
+		prnt = prnt + "Running on servers:\n- {}\n-----------------------------------"
+		print(prnt.format(discord.__version__, servers))
 		print('Bot loaded succesfully at {}.'.format(datetime.now().strftime('%H:%M:%S')))
 		print('-----------------------------------')
 		
@@ -204,14 +205,14 @@ class main(discord.Client):
 	############################################
 	async def cmd_disconnect(self, *args, **kwargs):
 		msg = kwargs.get('msg')
-		leaved = await self.leave_voice_by_server(msg)
+		leaved = await self.leave_voice_by_server(msg.server)
 		if not leaved:
 			await self.Error(2, msg) # 'I`m already homeless :('
 	############################################
 	async def cmd_shutdown(self, *args, **kwargs):
 		msg = kwargs.get('msg')
-		await self.leave_voice_by_server(msg)
 		await self.send_file(msg.channel, 'content\\shutdown.jpg')
+		await self.logout()
 		exit(0)
 	############################################
 	async def cmd_play(self, *args, **kwargs):
@@ -242,11 +243,11 @@ class main(discord.Client):
 	############################################
 	async def cmd_reload(self, *args, **kwargs):
 		msg = kwargs.get('msg')
-		await self.leave_voice_by_server(msg)
 		os.system('cls')
 		print('Don`t look there stranger! I`m fucking changi..ahem..reloading, meow!! ')
 		print('------')
 		await self.send_file(msg.channel, 'content\\reload.png')
+		await self.logout()
 		os.execl(sys.executable, 'python', 'bot.py', *sys.argv[1:])
 	############################################
 	# TODO: Check param method
@@ -391,8 +392,8 @@ class main(discord.Client):
 			if mess_arr:
 				cmd = mess_arr[0].lower()
 				args = mess_arr[1:]
-				if self.commands_arr.__contains__(cmd):
-					command = self.commands_arr.get(cmd)
+				command = self.commands_arr.get(cmd)
+				if command:
 					await getattr(self, command)(*args, msg = msg)
 				else:
 					await self.Error(17, msg) # 'No such command'
@@ -436,7 +437,6 @@ class main(discord.Client):
 			}
 		message = Errors.get(str(error_id), 'Unknown error')
 		await self.send_message(msg.channel, embed=discord.Embed(color=discord.Color.red(), description=(message)))
-			#await self.send_message(msg.channel, message)
 	############################################
 	def is_youtube_list(self, url):
 		#return True if str.startswith('https://www.youtube.com/playlist?list=') or str.startswith('www.youtube.com/playlist?list=') else False
@@ -600,28 +600,29 @@ class main(discord.Client):
 	############################################
 	async def connect_voice_channel_by_author(self, msg):
 		if msg.author.voice_channel:
-			await self.connect_voice_channel(msg, msg.author.voice_channel)
+			if not await self.connect_voice_channel(msg.server, msg.author.voice_channel):
+				await self.Error(18, msg) # 'I\'m already with you, my blind kitten, MEOW!'
 		else:
 			await self.Error(1, msg) # 'You\'re not on the voice channel'
 	############################################
 	async def connect_voice_channel_by_name(self, msg, channel_name):
 		channel = self.find_voice_channel_by_name(msg.server, channel_name)
 		if channel:
-			await self.connect_voice_channel(msg, channel)
+			if not await self.connect_voice_channel(msg.server, channel):
+				await self.Error(9, msg) # 'I\'m already here, dont you see me?'
 		else:
 			await self.Error(8, msg) # 'Create such a channel first'
 	############################################
-	async def connect_voice_channel(self, msg, channel):
-		if not self.is_voice_connected(msg.server):
-			await super().join_voice_channel(channel)
-			#print('[INFO] Joined channel: \'{}\'. On server: \'{}\'.'.format(channel, channel.server))
+	async def connect_voice_channel(self, server, channel):
+		if not self.is_voice_connected(server):
+			await super().join_voice_channel(channel)#print('[INFO] Joined channel: \'{}\'. On server: \'{}\'.'.format(channel, channel.server))
 		else:
-			voiceClient  = super().voice_client_in(msg.server)
-			if not voiceClient.channel == channel:
-				await voiceClient.move_to(channel)
-				#print('[INFO] Moved to channel: \'{}\'. On server: \'{}\'.'.format(channel, channel.server))
-			else:
-				await self.Error(18, msg) # 'I\'m already with you, my blind kitten, MEOW!'
+			voiceClient  = super().voice_client_in(server)
+			if voiceClient.channel == channel:
+				return False
+			await voiceClient.move_to(channel)
+		return True#print('[INFO] Moved to channel: \'{}\'. On server: \'{}\'.'.format(channel, channel.server))
+			
 	############################################
 	def find_voice_channel_by_name(self, server, channel_name):
 		for channel in server.channels:
@@ -630,14 +631,12 @@ class main(discord.Client):
 		#print('[ERROR] No such channel: \'{}\' on server: \'{}\''.format(channel_name, server))
 		return None
 	############################################
-	async def leave_voice_by_server(self, msg):
-		if self.is_voice_connected(msg.server):
-			voiceClient = super().voice_client_in(msg.server)
+	async def leave_voice_by_server(self, server):
+		if self.is_voice_connected(server):
+			voiceClient = super().voice_client_in(server)
 			#print('[INFO] Disconnected from channel: \'{}\'. On server: \'{}\'.'.format(voiceClient.channel, msg.server))
 			await voiceClient.disconnect()
 			return True
-		else:
-			return False
 	############################################
 	arts = [
 	"""

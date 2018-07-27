@@ -138,7 +138,7 @@ class main(discord.Client):
 		print('\t' + self.user.id)
 		await self.change_presence(game = discord.Game(name = "Blue Cat, Meow !!!"))
 		servers = "\n- ".join([s.name + " (" + s.id + ")" for s in self.servers])
-		prnt = "-----------------------------------\n    SYK Bot\n    discord.py version: {}\n    "
+		prnt = "-----------------------------------\n	SYK Bot\n	discord.py version: {}\n	"
 		prnt = prnt + "Running on servers:\n- {}\n-----------------------------------"
 		print(prnt.format(discord.__version__, servers))
 		print('Bot loaded succesfully at {}.'.format(datetime.now().strftime('%H:%M:%S')))
@@ -202,6 +202,18 @@ class main(discord.Client):
 			await self.connect_voice_channel_by_name(msg, channel_name)
 		else:
 			await self.connect_voice_channel_by_author(msg)
+	############################################
+	# async def cmd_connect(self, *args, **kwargs):
+	# 	msg = kwargs.get('msg')
+	# 	channel_name = ' '.join(args)
+	# 	if channel_name:
+	# 		channel = self.find_voice_channel_by_name(msg.server, channel_name)
+	# 		if channel:
+	# 			await self.connect_(msg, channel = channel)
+	# 		else:
+	# 			await self.Error(8, msg) # 'Create such a channel first'
+	# 	else:
+	# 		await self.connect_(msg)
 	############################################
 	async def cmd_disconnect(self, *args, **kwargs):
 		msg = kwargs.get('msg')
@@ -348,12 +360,7 @@ class main(discord.Client):
 		print('--------')
 		print('[TEST]')
 		sid = msg.server.id
-		# try:
-		# 	player = await super().voice_client_in(msg.server).create_ytdl_player(args[0])
-		# except Exception as e:
-		# 	print('fdlkgjeifjahefihlfoewh;foawhef;kwahjf;klawhdflkahfdlk')
-		# else:
-		# 	player.start()
+		############################################
 		# cfg = {'gg': 'ez'}
 		# print(cfg)
 		#print(self.Settings)
@@ -597,6 +604,21 @@ class main(discord.Client):
 	#	Connect block
 	#
 ################################################# 
+	# async def connect_(self, msg, channel = None):
+	# 	if not channel:
+	# 		channel = msg.author.voice_channel
+	# 		if not channel:
+	# 			await self.Error(1, msg) # 'You\'re not on the voice channel'
+	# 			return 
+	# 	vc = super().voice_client_in(msg.server)
+	# 	if vc:
+	# 		if vc.channel == channel:
+	# 			await self.Error(18, msg) # 'I\'m already with you, my blind kitten, MEOW!'
+	# 			return 
+	# 		await vc.move_to(channel)
+	# 	else:
+	# 		await super().join_voice_channel(channel)
+	# 	await self.send_message(msg.channel, 'Connected to: **{}**'.format(channel))
 	############################################
 	async def connect_voice_channel_by_author(self, msg):
 		if msg.author.voice_channel:
@@ -621,8 +643,7 @@ class main(discord.Client):
 			if voiceClient.channel == channel:
 				return False
 			await voiceClient.move_to(channel)
-		return True#print('[INFO] Moved to channel: \'{}\'. On server: \'{}\'.'.format(channel, channel.server))
-			
+		return True#print('[INFO] Moved to channel: \'{}\'. On server: \'{}\'.'.format(channel, channel.server))		
 	############################################
 	def find_voice_channel_by_name(self, server, channel_name):
 		for channel in server.channels:

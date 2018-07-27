@@ -232,14 +232,14 @@ class main(discord.Client):
 		if args:
 			url = args[0]
 			if self.is_youtube_link(url):
-				if not self.is_youtube_list(url):
-					if self.is_voice_connected(msg.server):
-						await self.start_solo_song(msg, url)	
-					else:
-						await self.connect_voice_channel_by_author(msg)
-						await self.start_solo_song(msg, url)	
+				#if not self.is_youtube_list(url):
+				if self.is_voice_connected(msg.server):
+					await self.start_solo_song(msg, url)	
 				else:
-					await self.Error(6, msg) # 'It`s not a single song!'
+					await self.connect_voice_channel_by_author(msg)
+					await self.start_solo_song(msg, url)	
+				#else:
+				#	await self.Error(6, msg) # 'It`s not a single song!'
 			else:
 				await self.Error(5, msg) # 'Not valid link'
 		else:
@@ -338,7 +338,7 @@ class main(discord.Client):
 		cfg = {}
 		for arg in args:
 			cfg.update(self.get_dict(*arg.split(':')))
-		self.set_attributes(msg.server.id,**cfg)
+		self.set_attributes(msg.server.id, **cfg)
 	############################################
 	async def cmd_reset_settings(self, *args, **kwargs):
 		msg = kwargs.get('msg')
@@ -447,7 +447,7 @@ class main(discord.Client):
 	############################################
 	def is_youtube_list(self, url):
 		#return True if str.startswith('https://www.youtube.com/playlist?list=') or str.startswith('www.youtube.com/playlist?list=') else False
-		return True if 'list=' in url else False
+		return True if ('youtu.be' or 'youtube.com' in url) and ('list=' in url) else False
 	############################################
 	def is_youtube_link(self, url):
 		#return True if str.startswith('https://youtu.be/') or str.startswith('www.youtube.com/') or str.startswith('https://www.youtube.com/') else False
@@ -579,7 +579,8 @@ class main(discord.Client):
 	############################################
 	async def start_solo_song(self, msg, url):
 		player = await self.start_new_player(msg, url)
-		player.volume = self.get_attr(msg.server.id,'Volume')
+		await asyncio.sleep(20)
+		# player.volume = self.get_attr(msg.server.id,'Volume')
 		await self.add_player_to_list(msg.server.id, player)
 		#await self.timer(msg)
 		player.start()
@@ -607,6 +608,7 @@ class main(discord.Client):
 	# async def connect_(self, msg, channel = None):
 	# 	if not channel:
 	# 		channel = msg.author.voice_channel
+			# TODO: Check voice channel
 	# 		if not channel:
 	# 			await self.Error(1, msg) # 'You\'re not on the voice channel'
 	# 			return 

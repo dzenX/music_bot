@@ -8,7 +8,9 @@ from datetime import datetime
 
 #TODO: help RUTULIA
 #self = discord.self()
-
+""""
+	Settings for creating youtube stream
+"""
 ytdl_format_options = {
 	'format': 'bestaudio/best',
 	'extractaudio': True,
@@ -33,8 +35,9 @@ ytdl_format_options = {
 # 	main.save_setting_to_files(main)
 
 class main(discord.Client):
-
-
+""""
+	Class represents discord bot work and functions
+"""
 	############################################
 	#
 	#	__init__ Block
@@ -48,6 +51,10 @@ class main(discord.Client):
 		self.__load_settings()
 		self.__start_bot()
 	############################################
+	""""
+		Default settings for bot in case
+		there is no config file
+	"""
 	Defaults = {
 		'SettingsFolder':'settings',
 		'TokenFile':'my.token',
@@ -75,6 +82,9 @@ class main(discord.Client):
 		print('[INFO] Defaults succesfully loaded')
 		print('------')
 	############################################
+	""""
+		Loading codek
+	"""
 	def __load_opus(self):
 		print('[INFO] Trying to load OpusLib:')
 		if not discord.opus.is_loaded():
@@ -152,6 +162,12 @@ class main(discord.Client):
 	#	Commands block
 	#
 ################################################
+	""""
+		Commands for bot
+		To add command write:
+		'Name_of_command' : 'Name_of_function_that_implements_it',
+	"""
+	#TODO: command help
 	commands_arr = {
 		'hello' : 'cmd_hello',
 		'invite': 'cmd_invite',
@@ -417,6 +433,9 @@ class main(discord.Client):
 	#
 ################################################
 	############################################
+	""""
+		Error handling system
+	"""
 	# TODO: Same succes message system
 	async def Error(self, error_id, msg):
 		Errors = {

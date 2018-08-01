@@ -2,6 +2,7 @@
 # import os
 # import sys
 # import asyncio
+from connection import Connect
 
 from utils import Say
 
@@ -64,13 +65,14 @@ class Command:
 		else:
 			Say.success('Hello {0.mention}, wanna some music?'.format(author))
 
-# async def cmd_connect(self, *args, **kwargs):
-# 	msg = kwargs.get('msg')
-# 	channel_name = ' '.join(args)
-# 	if channel_name:
-# 		await self.connect_voice_channel_by_name(msg, channel_name)
-# 	else:
-# 		await self.connect_voice_channel_by_author(msg)
+	async def _cmd_connect(self):
+		channel_name = ' '.join(self.args)
+		connect = Connect(**self.ctx)
+		if channel_name:
+			await connect.connect_voice_channel_by_name(channel_name)
+		else:
+			await connect.connect_voice_channel_by_author()
+		del connect
 #
 # async def cmd_disconnect(self, *args, **kwargs):
 # 	msg = kwargs.get('msg')

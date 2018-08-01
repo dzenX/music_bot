@@ -41,7 +41,6 @@ class Main(discord.Client):
 	""""
 		Class represents discord bot work and functions
 	"""
-
 	############################################
 	#
 	#	__init__ Block
@@ -203,19 +202,15 @@ class Main(discord.Client):
 	############################################
 	async def on_message(self, msg: discord.Message):
 		await super().wait_until_ready()
-		# TODO: Fix exception when commands called from private chat
-		# self.set_attributes(msg.server.id, Volume = v)
-		# AttributeError: 'NoneType' object has no attribute 'id'
+		# TODO: Fix exception when commands called from private chat (check if msg.server is not None)
 		if msg.content.startswith(self.Prefix) and not msg.author == self.user:
-			# await self.chat_log(msg)
 			mess_arr = msg.content[len(self.Prefix):].split()
 			if mess_arr:
 				command = mess_arr[0].lower()
 				args = mess_arr[1:]
-				# await getattr(self, command)(*args, msg=msg)
-				ctx = dict(Author=msg.author, Server=msg.server, Channel=msg.channel)
+				ctx = dict(Author=msg.author, Server=msg.server, Channel=msg.channel, Client=self)
 				try:
-					cmd = Command(command=command, args=args, loop=self.loop, ctx=ctx)
+					cmd = Command(command=command, args=args, ctx=ctx)
 					await cmd.ex()
 				except Error as e:
 					embed = discord.Embed(color=discord.Color.red(), description=str(e))
@@ -226,7 +221,7 @@ class Main(discord.Client):
 						await self.send_message(msg.channel, embed=embed)
 					else:
 						await self.send_message(msg.channel, e)
-				else:
+				else:  # TODO: what should he do if command dont need to print anything
 					await self.send_message(msg.channel, 'Idk whats happening here')
 			else:
 				await self.error(19, msg)  # 'What are you hesitant.. Command me dont be a p&&sy, Meow!'
@@ -448,78 +443,7 @@ class Main(discord.Client):
 	############################################
 	################################################
 
-	#################################################
-	#
-	#	Connect block
-	#
-	#################################################
-	# async def connect_(self, msg, channel = None):
-	# 	if not channel:
-	# 		channel = msg.author.voice_channel
-	# TODO: Check voice channel
-	# 		if not channel:
-	# 			await self.Error(1, msg) # 'You\'re not on the voice channel'
-	# 			return
-	# 	vc = super().voice_client_in(msg.server)
-	# 	if vc:
-	# 		if vc.channel == channel:
-	# 			await self.Error(18, msg) # 'I\'m already with you, my blind kitten, MEOW!'
-	# 			return
-	# 		await vc.move_to(channel)
-	# 	else:
-	# 		await super().join_voice_channel(channel)
-	# 	await self.send_message(msg.channel, 'Connected to: **{}**'.format(channel))
-	############################################
-	async def connect_voice_channel_by_author(self, msg):
-		if hasattr(msg.author, 'voice_channel'):
-			if msg.author.voice_channel:
-				if not await self.connect_voice_channel(msg.server, msg.author.voice_channel):
-					await self.error(18, msg)  # 'I\'m already with you, my blind kitten, MEOW!'
-			else:
-				await self.error(1, msg)  # 'You\'re not on the voice channel'
-		else:  # except when trying to call from private chat
-			await self.error(22, msg)
 
-	# 'Do not try to deceive me and slowly, so that I see your hands, come to my server'
-
-	############################################
-	async def connect_voice_channel_by_name(self, msg, channel_name):
-		channel = self.find_voice_channel_by_name(msg.server, channel_name)
-		if channel:
-			if not await self.connect_voice_channel(msg.server, channel):
-				await self.error(9, msg)  # 'I\'m already here, dont you see me?'
-		else:
-			await self.error(8, msg)  # 'Create such a channel first'
-
-	############################################
-	async def connect_voice_channel(self, server, channel):
-		if not self.is_voice_connected(server):
-			await super().join_voice_channel(channel)
-		# print('[INFO] Joined channel: \'{}\'. On server: \'{}\'.'.format(channel, channel.server))
-		else:
-			voiceClient = super().voice_client_in(server)
-			if voiceClient.channel == channel:
-				return False
-			await voiceClient.move_to(channel)
-		return True
-
-	# print('[INFO] Moved to channel: \'{}\'. On server: \'{}\'.'.format(channel, channel.server))
-	############################################
-	@staticmethod
-	def find_voice_channel_by_name(server, channel_name):
-		for channel in server.channels:
-			if str(channel.type) == "voice" and channel.name.lower() == channel_name.lower():
-				return channel
-		# print('[ERROR] No such channel: \'{}\' on server: \'{}\''.format(channel_name, server))
-		return None
-
-	############################################
-	async def leave_voice_by_server(self, server):
-		if self.is_voice_connected(server):
-			voiceClient = super().voice_client_in(server)
-			# print('[INFO] Disconnected from channel: \'{}\'. On server: \'{}\'.'.format(voiceClient.channel, msg.server))
-			await voiceClient.disconnect()
-			return True
 
 	############################################
 	arts = [

@@ -391,7 +391,7 @@ class Main(discord.Client):
 		if not cfg:
 			await self.error(21, msg)  # 'No setting saved for your server'
 		else:
-			await self.send_message(msg.channal, cfg)
+			await self.send_message(msg.channel, cfg)
 
 	############################################
 

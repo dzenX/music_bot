@@ -1,9 +1,9 @@
-# import discord
-# import os
-# import sys
-# import asyncio
-from connection import Connect
+import os
+import sys
 
+from discord import Client
+
+from connection import Connect
 from utils import Say
 
 
@@ -36,24 +36,24 @@ class Command:
 		################
 		'kys': 'shutdown',
 		'shutdown': 'shutdown',
-		################
-		'play': 'play',
-		################
-		'pause': 'pause',
-		'resume': 'resume',
-		'stop': 'stop',
-		'volume': 'volume',
-		'now': 'now',
-		################
-		'loop': 'loop',
-		################
+		# ################
+		# 'play': 'play',
+		# ################
+		# 'pause': 'pause',
+		# 'resume': 'resume',
+		# 'stop': 'stop',
+		# 'volume': 'volume',
+		# 'now': 'now',
+		# ################
+		# 'loop': 'loop',
+		# ################
 		'reload': 'reload',
 		'rel': 'reload',
-		################
-		'set': 'set_settings',
-		'settings': 'show_settings',
-		'reset': 'reset_settings',
-		################
+		# ################
+		# 'set': 'set_settings',
+		# 'settings': 'show_settings',
+		# 'reset': 'reset_settings',
+		# ################
 		't': 'test',
 		################
 	}
@@ -65,6 +65,12 @@ class Command:
 		else:
 			Say.success('Hello {0.mention}, wanna some music?'.format(author))
 
+	async def _cmd_invite(self):
+		if self.ctx.InviteLink:
+			Say.success(self.ctx.InviteLink)
+		else:
+			Say.error(20)  # 'No invite link was provided'
+
 	async def _cmd_connect(self):
 		channel_name = ' '.join(self.args)
 		connect = Connect(**self.ctx)
@@ -72,20 +78,30 @@ class Command:
 			await connect.connect_voice_channel_by_name(channel_name)
 		else:
 			await connect.connect_voice_channel_by_author()
-		del connect
-#
-# async def cmd_disconnect(self, *args, **kwargs):
-# 	msg = kwargs.get('msg')
-# 	leaved = await self.leave_voice_by_server(msg.server)
-# 	if not leaved:
-# 		await self.error(2, msg)  # 'I`m already homeless :('
-#
-# async def cmd_shutdown(self, *args, **kwargs):
-# 	msg = kwargs.get('msg')
-# 	await self.send_file(msg.channel, 'content\\shutdown.jpg')
-# 	await self.logout()
-# 	exit(0)
-#
+
+	async def _cmd_disconnect(self):
+		connect = Connect(**self.ctx)
+		leaved = await connect.leave_voice()
+		if not leaved:
+			Say.error(2)  # 'I`m already homeless :('
+
+	async def _cmd_shutdown(self):
+		client = self.ctx['Client']
+		await Client.send_file(client, self.ctx['Channel'], 'content\\shutdown.jpg')
+		await Client.logout(client)
+		exit(0)
+
+	async def _cmd_reload(self):
+		os.system('cls')
+		print('Don`t look there stranger! I`m fucking changi..ahem..reloading, meow!! ')
+		print('------')
+		client = self.ctx['Client']
+		print(client.Volume)
+		await Client.send_file(client, self.ctx['Channel'], 'content\\reload.png')
+		await Client.logout(client)
+		os.execl(sys.executable, 'python', 'bot.py', *sys.argv[1:])
+
+
 # async def cmd_play(self, *args, **kwargs):
 # 	msg = kwargs.get('msg')
 # 	if args:
@@ -114,15 +130,7 @@ class Command:
 # 		await self.error(4, msg)  # 'Nothing is being played'
 #
 # ############################################
-# async def cmd_reload(self, *args, **kwargs):
-# 	msg = kwargs.get('msg')
-# 	os.system('cls')
-# 	print('Don`t look there stranger! I`m fucking changi..ahem..reloading, meow!! ')
-# 	print('------')
-# 	await self.send_file(msg.channel, 'content\\reload.png')
-# 	await self.logout()
-# 	os.execl(sys.executable, 'python', 'bot.py', *sys.argv[1:])
-#
+
 # ############################################
 # # TODO: Check param method
 # async def cmd_volume(self, *args, **kwargs):
@@ -188,13 +196,7 @@ class Command:
 # 		await self.error(4, msg)  # 'Nothing is being played'
 #
 # ############################################
-# async def cmd_invite(self, *args, **kwargs):
-# 	msg = kwargs.get('msg')
-# 	if self.InviteLink:
-# 		await self.send_message(msg.channel, self.InviteLink)
-# 	else:
-# 		await self.error(20, msg)  # 'No invite link was provided'
-#
+
 # ############################################
 # async def cmd_loop(self, *args, **kwargs):
 # 	pass

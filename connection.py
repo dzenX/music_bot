@@ -44,6 +44,13 @@ class Connect:
 		return True
 
 	############################################
+	async def leave_voice(self):
+		if self.client.is_voice_connected(self.server):
+			voiceClient = Client.voice_client_in(self.client, self.server)
+			await voiceClient.disconnect()
+			return True
+
+	############################################
 	@staticmethod
 	def find_voice_channel(server, channel_name):
 		if isinstance(channel_name, Channel):
@@ -52,10 +59,3 @@ class Connect:
 			if str(channel.type) == "voice" and channel.name.lower() == channel_name.lower():
 				return channel
 		return None
-
-	############################################
-	async def leave_voice_by_server(self):
-		if self.client.is_voice_connected(self.server):
-			voiceClient = self.client.super().voice_client_in(self.server)
-			await voiceClient.disconnect()
-			return True

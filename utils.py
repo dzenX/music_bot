@@ -9,9 +9,10 @@ class Error(Exception):
 
 
 class Success(Exception):
-	def __init__(self, message, embed=False):
+	def __init__(self, message, embed=False, file=False):
 		self.content = message
 		self.embed = embed
+		self.isfile = file
 		self.time = datetime.now()
 
 
@@ -47,5 +48,5 @@ class Say:
 		raise Error(message)
 
 	@classmethod
-	def success(cls, message):
+	def success(cls, message, *args):
 		raise Success(message)

@@ -9,6 +9,8 @@ class Error(Exception):
 		self.embed = embed
 		self.isfile = file
 		self.time = datetime.now()
+
+
 # def __str__(self):
 # 	return self.message
 
@@ -20,10 +22,15 @@ class Success(Exception):
 		self.embed = embed
 		self.isfile = file
 		self.time = datetime.now()
+
+
 # def __str__(self):
 # 	return self.message
 
+
 class Say:
+	# TODO: Make __errors dict like: {'1': ['message','content']} so we can log 'content' with log system
+	# TODO: 'content' should be like [ERROR] on server blabla with command blabla, cant do blabla
 	__errors = {
 		'1': 'You\'re not on the voice channel',
 		'2': 'I`m already homeless :(',

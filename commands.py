@@ -7,6 +7,14 @@ from connection import Connect
 from utils import Say
 
 
+def onlyonserver(func):
+	def wrap(self):
+		if not self.ctx.get('Server'):
+			Say.error(22)
+		func()
+
+	return wrap
+
 class Command:
 	def __init__(self, msg_arr, ctx):
 		if msg_arr:
@@ -18,14 +26,6 @@ class Command:
 			self.ctx = ctx
 		else:
 			Say.error(19)  # 'What are you hesitant.. Command me dont be a p&&sy, Meow!'
-
-
-
-
-
-
-
-
 
 	async def ex(self):
 		await getattr(self, self.command)()
@@ -83,6 +83,7 @@ class Command:
 		else:
 			Say.error(20)  # 'No invite link was provided'
 
+	@onlyonserver
 	async def _cmd_connect(self):
 		channel_name = ' '.join(self.args)
 		connect = Connect(**self.ctx)
@@ -91,6 +92,7 @@ class Command:
 		else:
 			await connect.connect_voice_channel_by_author()
 
+	@onlyonserver
 	async def _cmd_disconnect(self):
 		connect = Connect(**self.ctx)
 		leaved = await connect.leave_voice()

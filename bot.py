@@ -151,16 +151,17 @@ class Main(discord.Client):
 	################################################
 	async def on_message(self, msg: discord.Message):
 		await super().wait_until_ready()
-		# TODO: Fix exception when commands called from private chat (check if msg.server is not None)
 		if msg.content.startswith(self.Prefix) and not msg.author == self.user:
 			await self._command(msg)
 
 	async def _command(self, msg):
 		msg_arr = msg.content[len(self.Prefix):].split()
 		ctx = dict(Author=msg.author, Server=msg.server, Channel=msg.channel, Client=self)
+		# TODO Log system should log from here
 		try:
 			await Command(msg_arr, ctx).ex()
 		except Error as e:
+			# TODO: What types of erros ans success messages do we need?(files, embed, etc.)
 			if e.isfile:
 				await self.send_file(msg.channel, str(e))
 			elif e.embed:
@@ -237,7 +238,7 @@ class Main(discord.Client):
 	░░░███░░░▒▒▒██████▓▓░░░ 
 	░░██░░░░░░▒▒▒██████▓▓░░
 	░██▄▄▄▄░░░▄▄▄▄█████▓▓░░
-	░██░(◐)░░░▒(◐)▒██████
+	░██░(◐)░░░▒(◐)▒██████▓▓░░
 	░██░░░░░░░▒▒▒▒▒█████▓▓░ 
 	░██░░░▀▄▄▀▒▒▒▒▒█████▓▓░
 	░█░███▄█▄█▄███░█▒████▓▓

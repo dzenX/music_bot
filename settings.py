@@ -85,7 +85,7 @@ class Settings:
 
 	#########################################
 	#
-	#   Public functions
+	#   Public memner methods
 	#
 	#########################################
 	# TODO: Should i check files for settings or just list. If all setting load during init, and all new auto save hm..

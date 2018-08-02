@@ -3,49 +3,25 @@ from datetime import datetime
 
 
 class Error(Exception):
-	def __init__(self, message, embed=True):
-		self.content = message
-		self.embed = embed
-		self.time = datetime.now()
-
-
-class Success(Exception):
-	def __init__(self, message, embed=False, file=False):
-		self.content = message
+	def __init__(self, message, content=None, embed=True, file=False):
+		self.message = message
+		self.content = content
 		self.embed = embed
 		self.isfile = file
 		self.time = datetime.now()
+# def __str__(self):
+# 	return self.message
 
 
-def silent_remove(filename):
-	try:
-		os.remove(filename)
-	except OSError:
-		pass
-
-
-def get_dict(key, value):
-	try:
-		result = float(value)
-	except:
-		result = value
-	return dict([(key, result)])
-
-
-# TODO: Log system
-def chat_log(msg):
-	log = '[CHATLOG] ({}) [{}] <{}> {}: {}'
-	log = log.format(msg.timestamp, msg.server.name, msg.channel.name, msg.author.display_name, msg.content)
-	print(log)
-
-
-def is_youtube_list(url):
-	return True if ('youtu.be' or 'youtube.com' in url) and ('list=' in url) else False
-
-
-def is_youtube_link(url):
-	return True if 'youtu.be' or 'youtube.com' in url else False
-
+class Success(Exception):
+	def __init__(self, message, content=None, embed=False, file=False):
+		self.message = message
+		self.content = content
+		self.embed = embed
+		self.isfile = file
+		self.time = datetime.now()
+# def __str__(self):
+# 	return self.message
 
 class Say:
 	__errors = {
@@ -80,4 +56,34 @@ class Say:
 
 	@classmethod
 	def success(cls, message, *args):
-		raise Success(message)
+		raise Success(message, *args)
+
+
+def silent_remove(filename):
+	try:
+		os.remove(filename)
+	except OSError:
+		pass
+
+
+def get_dict(key, value):
+	try:
+		result = float(value)
+	except:
+		result = value
+	return dict([(key, result)])
+
+
+# TODO: Log system
+def chat_log(msg):
+	log = '[CHATLOG] ({}) [{}] <{}> {}: {}'
+	log = log.format(msg.timestamp, msg.server.name, msg.channel.name, msg.author.display_name, msg.content)
+	print(log)
+
+
+def is_youtube_list(url):
+	return True if ('youtu.be' or 'youtube.com' in url) and ('list=' in url) else False
+
+
+def is_youtube_link(url):
+	return True if 'youtu.be' or 'youtube.com' in url else False

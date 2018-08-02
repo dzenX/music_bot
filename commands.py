@@ -8,12 +8,24 @@ from utils import Say
 
 
 class Command:
-	def __init__(self, **kwargs):
-		self.command = '_cmd_' + self.commands_arr.get(kwargs.pop('command'))
-		if not self.command:
-			Say.error(17)  # 'No such command'
-		self.args = kwargs.get('args')
-		self.ctx = kwargs.get('ctx')
+	def __init__(self, msg_arr, ctx):
+		if msg_arr:
+			self.command = self.commands_arr.get(msg_arr[0].lower())
+			if not self.command:
+				Say.error(17)  # 'No such command'
+			self.command = '_cmd_' + self.command
+			self.args = msg_arr[1:]
+			self.ctx = ctx
+		else:
+			Say.error(19)  # 'What are you hesitant.. Command me dont be a p&&sy, Meow!'
+
+
+
+
+
+
+
+
 
 	async def ex(self):
 		await getattr(self, self.command)()
@@ -97,6 +109,7 @@ class Command:
 		print('------')
 		client = self.ctx['Client']
 		print(client.Volume)
+		# Say.success()
 		await Client.send_file(client, self.ctx['Channel'], 'content\\reload.png')
 		await Client.logout(client)
 		os.execl(sys.executable, 'python', 'bot.py', *sys.argv[1:])

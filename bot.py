@@ -153,63 +153,31 @@ class Main(discord.Client):
 		await super().wait_until_ready()
 		# TODO: Fix exception when commands called from private chat (check if msg.server is not None)
 		if msg.content.startswith(self.Prefix) and not msg.author == self.user:
-			mess_arr = msg.content[len(self.Prefix):].split()
-			if mess_arr:
-				command = mess_arr[0].lower()
-				args = mess_arr[1:]
-				ctx = dict(Author=msg.author, Server=msg.server, Channel=msg.channel, Client=self)
-				try:
-					cmd = Command(command=command, args=args, ctx=ctx)
-					await cmd.ex()
-				except Error as e:
-					embed = discord.Embed(color=discord.Color.red(), description=str(e))
-					await self.send_message(msg.channel, embed=embed)
-				except Success as e:
-					if e.embed:
-						embed = discord.Embed(color=discord.Color.green(), description=str(e))
-						await self.send_message(msg.channel, embed=embed)
-					else:
-						await self.send_message(msg.channel, e)
-				else:  # TODO: what should he do if command dont need to print anything
-					await self.send_message(msg.channel, 'Idk whats happening here')
-			else:
-				await self.error(19, msg)  # 'What are you hesitant.. Command me dont be a p&&sy, Meow!'
+			await self._command(msg)
 
-	################################################
-	#
-	#	Utils Block
-	#
-	################################################
-	async def error(self, error_id, msg):
-		""""
-			Error handling system
-		"""
-		errors = {
-			'1': 'You\'re not on the voice channel',
-			'2': 'I`m already homeless :(',
-			'3': 'Unable to connect',
-			'4': 'Nothing is being played',
-			'5': 'Not valid link',
-			'6': 'It`s not a single song!',
-			'7': 'Not valid volume value',
-			'8': 'Create such a channel first, motherfucker',
-			'9': 'I\'m already here, dont you see me?',
-			'10': 'Invalid params, just like you',
-			'11': 'RIP ears\n{}'.format(datetime.now().strftime('%Y-%m-%d')),
-			'12': 'Enter this f*&*ing song url here. Don\'t make me nervous, you mongol kid.',
-			'13': 'Your song already ended',
-			'14': 'The song is already playing, dont you hear?',
-			'15': 'The song is already paused, dont you hear this quality silence?',
-			'16': 'Is there life below 0?',
-			'17': 'No such command',
-			'18': 'I\'m already with you, my blind kitten, MEOW!',
-			'19': 'What are you hesitant.. Command me dont be a p&&sy, Meow!',
-			'20': 'No invite link was provided',
-			'21': 'No setting saved for your server',
-			'22': 'Do not try to deceive me and slowly, so that I see your hands, come to my server',
-		}
-		message = errors.get(str(error_id), 'Unknown error')
-		await self.send_message(msg.channel, embed=discord.Embed(color=discord.Color.red(), description=message))
+	async def _command(self, msg):
+		msg_arr = msg.content[len(self.Prefix):].split()
+		ctx = dict(Author=msg.author, Server=msg.server, Channel=msg.channel, Client=self)
+		try:
+			await Command(msg_arr, ctx).ex()
+		except Error as e:
+			if e.isfile:
+				await self.send_file(msg.channel, str(e))
+			elif e.embed:
+				embed = discord.Embed(color=discord.Color.red(), description=str(e))
+				await self.send_message(msg.channel, embed=embed)
+			else:
+				await self.send_message(msg.channel, str(e))
+		except Success as e:
+			if e.isfile:
+				await self.send_file(msg.channel, str(e))
+			elif e.embed:
+				embed = discord.Embed(color=discord.Color.green(), description=str(e))
+				await self.send_message(msg.channel, embed=embed)
+			else:
+				await self.send_message(msg.channel, str(e))
+		else:  # TODO: what should he do if command dont need to print anything
+			await self.send_message(msg.channel, 'Idk whats happening here')
 
 	################################################
 	#
@@ -287,6 +255,6 @@ class Main(discord.Client):
 
 ##########################################################
 # ========================================================#
-Main()  # Main Part of Your Bot	!!!				 #
+Main()  # Main Part of Your Bot	!!!				          #
 # ========================================================#
 ##########################################################

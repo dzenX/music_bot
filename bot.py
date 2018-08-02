@@ -9,6 +9,7 @@ import yaml
 # TODO: help RUTULIA
 # self = discord.self()
 from commands import Command
+from settings import Settings
 from utils import Error, Success
 
 """"
@@ -51,7 +52,7 @@ class Main(discord.Client):
 		self.__load_defaults()
 		self.__load_opus()
 		self.__load_token()
-		self.__load_settings()
+		self.Settings = Settings(self.SettingsFolder)
 		self.__start_bot()
 
 	############################################
@@ -70,6 +71,7 @@ class Main(discord.Client):
 		'ConfigFile': 'config.yml',
 	}
 
+	############################################
 	def __load_defaults(self):
 		print('[INFO] Loading default settings')
 		mode = 'r' if os.path.isfile(self.Defaults['ConfigFile']) else 'w+'
@@ -126,29 +128,6 @@ class Main(discord.Client):
 		print('------')
 
 	############################################
-	def __load_settings(self):
-		print('[INFO] Trying to load saved settings')
-		if not os.path.isdir(self.SettingsFolder):
-			os.makedirs(self.SettingsFolder)
-			print('[WARNING] No saved settings directory found, so ill create it')
-		else:
-			print('[INFO] Loading settings from files')
-			files = os.listdir(self.SettingsFolder)
-			files = list(filter(lambda x: x.endswith('.yml'), files))
-			if not files:
-				print('[WARNING] No saved settings found in \'{}\' directory'.format(self.SettingsFolder))
-			else:
-				self._update_cfg_from_files(files)
-				print('[INFO] Settings succesfully loaded')
-		print('------')
-
-	############################################
-	def _update_cfg_from_files(self, files):
-		for file in files:
-			with open(self.SettingsFolder + file, 'r') as f:
-				self.add_cfg_to_list(file[:-4], yaml.load(f))
-
-	############################################
 	def __start_bot(self, **kwargs):
 		self.loop.run_until_complete(self.start(self.Token, **kwargs))
 
@@ -166,40 +145,10 @@ class Main(discord.Client):
 		print('-----------------------------------')
 
 	################################################
-
-	############################################
-	async def cmd_test(self, *args, **kwargs):
-		msg = kwargs.get('msg')
-		print('--------')
-		print('[TEST]')
-		# sid = msg.server.id
-		############################################
-		# cfg = {'gg': 'ez'}
-		# print(cfg)
-		# print(self.Settings)
-		# print(self.get_cfg_from_file(sid))
-		# await self.send_message(msg.server.get_member('370641997238894602'), self.arts[0])
-		# self.add_cfg_to_list(sid,cfg)
-		# print(self.Settings)
-		# self.set_attributes(sid, gg = 'wp', sht = 12)
-		# print(self.Settings)
-		# print(self.get_cfg_from_list(sid))
-		# cf = self.get_cfg_from_list(sid)
-		# print('Set-----')
-		# self.set_attributes(sid, gg = 'wp', sht = 12)
-		# print(self.get_cfg_from_list(sid))
-		# print(cf)
-		print('--------')
-
-	############################################
-	################################################
-
-	################################################
 	#
 	#	On_Message block
 	#
 	################################################
-	############################################
 	async def on_message(self, msg: discord.Message):
 		await super().wait_until_ready()
 		# TODO: Fix exception when commands called from private chat (check if msg.server is not None)
@@ -226,16 +175,11 @@ class Main(discord.Client):
 			else:
 				await self.error(19, msg)  # 'What are you hesitant.. Command me dont be a p&&sy, Meow!'
 
-	############################################
-	################################################
-
 	################################################
 	#
 	#	Utils Block
 	#
 	################################################
-	############################################
-	# TODO: Same success message system
 	async def error(self, error_id, msg):
 		""""
 			Error handling system
@@ -266,129 +210,6 @@ class Main(discord.Client):
 		}
 		message = errors.get(str(error_id), 'Unknown error')
 		await self.send_message(msg.channel, embed=discord.Embed(color=discord.Color.red(), description=message))
-
-	############################################
-	@staticmethod
-	def is_youtube_list(url):
-		return True if ('youtu.be' or 'youtube.com' in url) and ('list=' in url) else False
-
-	############################################
-	@staticmethod
-	def is_youtube_link(url):
-		return True if 'youtu.be' or 'youtube.com' in url else False
-
-	############################################
-	# TODO: Log system
-	@staticmethod
-	async def chat_log(msg):
-		log = '[CHATLOG] ({}) [{}] <{}> {}: {}'
-		log = log.format(msg.timestamp, msg.server.name, msg.channel.name, msg.author.display_name, msg.content)
-		print(log)
-
-	############################################
-	################################################
-
-	################################################
-	#
-	#	Settings Block
-	#
-	################################################
-	Settings = {}
-
-	############################################
-
-	# main part
-
-	############################################
-	def get_attr(self, server_id, attr):
-		cfg = self.get_cfg_from_list(server_id)
-		return cfg.get(attr) if cfg else getattr(self, attr)
-
-	############################################
-	def set_attributes(self, server_id, **kwargs):
-		cfg = self.get_cfg_from_list(server_id)
-		if not cfg:
-			cfg = self.add_cfg_to_list(server_id, {})
-		cfg.update(kwargs)
-		self.save_cfg_to_file(server_id, cfg)
-
-	############################################
-	def reset_settings(self, server_id):
-		self.remove_cfg_from_list(server_id)
-		self.remove_settings_file(server_id)
-
-	############################################
-
-	############################################
-
-	# list conrol
-
-	############################################
-	def add_cfg_to_list(self, server_id, cfg):
-		self.Settings.update(self.get_dict(server_id, cfg))
-		return self.Settings.get(server_id)
-
-	############################################
-	def remove_cfg_from_list(self, server_id):
-		return True if self.Settings.pop(server_id, None) else False
-
-	############################################
-	def get_cfg_from_list(self, server_id):
-		return self.Settings.get(server_id)
-
-	############################################
-
-	############################################
-
-	# file control
-
-	# ############################################
-	# def save_setting_to_files(self):
-	# 	for server_id, cfg in self.Settings.items():
-	# 		self.save_cfg_to_file(server_id, cfg)
-	# ############################################
-	def save_cfg_to_file(self, server_id, cfg):
-		file = self.SettingsFolder + '{}.yml'.format(server_id)
-		with open(file, 'w') as f:
-			yaml.dump(cfg, f, default_flow_style=False)
-
-	############################################
-	def get_cfg_from_file(self, server_id):
-		file = self.SettingsFolder + '{}.yml'.format(server_id)
-		if os.path.isfile(file):
-			with open(file, 'r') as f:
-				cfg = yaml.load(f)
-			return cfg
-
-	############################################
-	def remove_settings_file(self, server_id):
-		self.silent_remove(self.SettingsFolder + '{}.yml'.format(server_id))
-
-	############################################
-
-	############################################
-
-	# utils
-
-	############################################
-	@staticmethod
-	def silent_remove(filename):
-		try:
-			os.remove(filename)
-		except OSError:
-			pass
-
-	############################################
-	@staticmethod
-	def get_dict(key, value):
-		try:
-			result = float(value)
-		except:
-			result = value
-		return dict([(key, result)])
-
-	############################################
-	################################################
 
 	################################################
 	#
@@ -441,11 +262,7 @@ class Main(discord.Client):
 		await self.delete_message(curr_msg)
 
 	############################################
-	################################################
 
-
-
-	############################################
 	arts = [
 		"""
 	░░░░▄███▓███████▓▓▓░░░░

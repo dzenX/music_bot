@@ -1,3 +1,4 @@
+import os
 from datetime import datetime
 
 
@@ -14,6 +15,36 @@ class Success(Exception):
 		self.embed = embed
 		self.isfile = file
 		self.time = datetime.now()
+
+
+def silent_remove(filename):
+	try:
+		os.remove(filename)
+	except OSError:
+		pass
+
+
+def get_dict(key, value):
+	try:
+		result = float(value)
+	except:
+		result = value
+	return dict([(key, result)])
+
+
+# TODO: Log system
+def chat_log(msg):
+	log = '[CHATLOG] ({}) [{}] <{}> {}: {}'
+	log = log.format(msg.timestamp, msg.server.name, msg.channel.name, msg.author.display_name, msg.content)
+	print(log)
+
+
+def is_youtube_list(url):
+	return True if ('youtu.be' or 'youtube.com' in url) and ('list=' in url) else False
+
+
+def is_youtube_link(url):
+	return True if 'youtu.be' or 'youtube.com' in url else False
 
 
 class Say:

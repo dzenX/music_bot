@@ -13,7 +13,7 @@ class Connect:
 	# print('[ERROR] No such channel: \'{}\' on server: \'{}\''.format(channel_name, server))
 	# print('[INFO] Moved to channel: \'{}\'. On server: \'{}\'.'.format(channel, channel.server))
 	# print('[INFO] Disconnected from channel: \'{}\'. On server: \'{}\'.'.format(voiceClient.channel, msg.server))
-	############################################
+	# TODO I dont really like talking methods.. Should we better do smth like return err_code here mhmm..
 	async def connect_voice_channel_by_author(self):
 		if self.author.voice_channel:
 			if not await self.__connect_voice_channel(self.author.voice_channel):

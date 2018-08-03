@@ -4,15 +4,15 @@ import sys
 from discord import Client
 
 from connection import Connect
+from player import Play
 from utils import Say
 
 
 def onlyonserver(func):
-	def wrap(self):
+	async def wrap(self):
 		if not self.ctx.get('Server'):
 			Say.error(22)
-		func()
-
+		await func(self)
 	return wrap
 
 class Command:
@@ -115,6 +115,19 @@ class Command:
 		await Client.send_file(client, self.ctx['Channel'], 'content\\reload.png')
 		await Client.logout(client)
 		os.execl(sys.executable, 'python', 'bot.py', *sys.argv[1:])
+
+	async def _cmd_test(self):
+		client = self.ctx['Client']
+		server = self.ctx['Server']
+		Play(client).stop(server=server)
+	# pl = await Client.voice_client_in(client, self.ctx['Server']).create_ytdl_player(self.args[0])
+	# pl.start()
+	# asyncio.sleep(15)
+	# pl.pause()
+	# print('stopped')
+	# vc = Client.voice_client_in(client, self.ctx['Server'])
+	# player = vc.player
+	# player.resume()
 
 
 # async def cmd_play(self, *args, **kwargs):

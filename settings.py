@@ -1,9 +1,8 @@
 import os
 
 import yaml
-from discord import Server
 
-from utils import get_dict, silent_remove
+from utils import get_dict, silent_remove, valid_server
 
 
 class Settings:
@@ -72,12 +71,6 @@ class Settings:
 		self._remove_settings_file(server_id)
 
 	@staticmethod
-	def valid_server(server):
-		if isinstance(server, Server):
-			return server.id
-		return server
-
-	@staticmethod
 	def valid_cfg(cfg):
 		if not isinstance(cfg, dict):
 			raise TypeError('Config should be a python dictionary')
@@ -90,7 +83,7 @@ class Settings:
 	#########################################
 	# TODO: Should i check files for settings or just list. If all setting load during init, and all new auto save hm..
 	def get_cfg(self, server):
-		server = self.valid_server(server)
+		server = valid_server(server)
 		return self._get_cfg_from_list(server)
 
 	# if not cfg:
@@ -98,22 +91,22 @@ class Settings:
 
 	def set_cfg(self, server, cfg):
 		cfg = self.valid_cfg(cfg)
-		server = self.valid_server(server)
+		server = valid_server(server)
 		self._reset_server_settings(server)
 		self._update_server_cfg(server, cfg)
 
 	def update_cfg(self, server, cfg):
 		cfg = self.valid_cfg(cfg)
-		server = self.valid_server(server)
+		server = valid_server(server)
 		self._update_server_cfg(server, cfg)
 
 	def reset_cfg(self, server):
-		server = self.valid_server(server)
+		server = valid_server(server)
 		self._reset_server_settings(server)
 
 	def set_attr(self, server, key, value):
 		key = str(key)
-		server = self.valid_server(server)
+		server = valid_server(server)
 		self._update_server_cfg(server, get_dict(key, value))
 
 	def get_attr(self, server, key):

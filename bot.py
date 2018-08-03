@@ -176,7 +176,7 @@ class Main(discord.Client):
 		To add command write:
 		'Name_of_command' : 'Name_of_function_that_implements_it',
 	"""
-	# TODO: command help
+	#TODO: send_message func
 	commands_arr = {
 		'hello': 'cmd_hello',
 		'invite': 'cmd_invite',
@@ -210,8 +210,46 @@ class Main(discord.Client):
 		################
 		't': 'cmd_test',
 		################
+		'help': 'cmd_help',
+		################
 	}
-
+	
+	commands_descr = {
+		'hello': 'Say hello to bot',
+		'invite': 'Invite link for bot',
+		################
+		'connect': 'Connect bot to voice channel you are in, or to mentioned voice channel',
+		'summon': 'Same as connect, but created for cute guys',
+		################
+		'disconnect': 'Disconnects from current voice channel',
+		'gtfo': 'Same as connect, but created for REAL GANSTA\'S',
+		################
+		'kys': 'Turns off the bot with WITH REAL HATE',
+		'shutdown': 'Turns off the bot',
+		################
+		'play': 'Plays song',
+		################
+		'pause': 'Pausing current playing song',
+		'resume': 'Resumes current stopped song',
+		'stop': 'Stops playing song',
+		'volume': 'Regulate volume',
+		'now': 'Shows current song',
+		################
+		'loop': 'Loops song',
+		################
+		'reload': 'Reloads bot',
+		'rel': 'Reloads bot for lazy people',
+		'relaod': 'Reloads bot for some iq braindead people',
+		################
+		'set': 'Sets bot settings',
+		'settings': 'Shows bot settings',
+		'reset': 'Resets bot settigs',
+		################
+		#'t': 'cmd_test',
+		################
+		'help': 'Shows this to you',
+	}
+	
 	############################################
 	async def cmd_hello(self, *args, **kwargs):
 		msg = kwargs.get('msg')
@@ -394,7 +432,14 @@ class Main(discord.Client):
 			await self.send_message(msg.channel, cfg)
 
 	############################################
-
+	async def cmd_help(self, *args, **kwargs):
+		msg = kwargs.get('msg')
+		await self.send_message(msg.channel, 'I\'m powerful enough to do this')
+		message = ""
+		for key in self.commands_arr:
+			message = message + self.Prefix + str(key) + ": " + self.commands_descr.get(str(key), "Can't help") + "\n"
+		await self.send_message(msg.channel, message)
+		await self.send_message(msg.channel, 'Choose your way stranger, and may the force be with you!')
 	############################################
 	async def cmd_test(self, *args, **kwargs):
 		msg = kwargs.get('msg')

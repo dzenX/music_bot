@@ -11,7 +11,6 @@ def serverid(func):
 		It will search for Server in kwargs: func(server=Server_Obj/Server_Id).
 		If dont exist it'll try to transform first incoming argument except 'self': self.method(server).
 		If first argument isnt Server_Obj it wont change anything.
-		:return: It calls decorated function with changed arguments
 	"""
 
 	def serverid_wrap(self, *args, **kwargs):
@@ -30,7 +29,7 @@ def serverid(func):
 
 def getplayer(func):
 	"""
-		Decorator for class Play  methods to get 'player' object to function if it accept just 'server' or 'server_id'
+		Decorator for class Play  methods to get 'player' object to function if it accept just 'server' or 'server_id'.
 		Itll search for server or player in kwargs if 'player' found  it will just pass it to decorated method.
 		Else if atleast 'server' found, it will use 'get_method' method from class Play to get player
 		and then will pass to decorated method.
@@ -58,7 +57,7 @@ class Play:
 
 	def _get_player(self, server_id):
 		"""
-			Method to get player object assotiated with given server id from list
+			Method to get player object assotiated with given server id from list.
 
 		:param server_id: Takes string with server id
 		:return: Player object assotiated with given server id if exist. Else - None
@@ -77,20 +76,20 @@ class Play:
 
 	def _remove_player(self, server_id):
 		"""
-			Method to remove player assotiated with given server id object from list
+			Method to remove player assotiated with given server id object from list.
 
 		:param server_id: Takes string with server id
-		:return: Returns player object for given server id if exist. Else - None
+		:return: Player object for given server id if exist. Else - None
 		"""
 		return self.Players.pop(server_id, None)
 
 	async def _create_youtube_player(self, server_id, url):
 		"""
-			Method to create player object for given server with given youtube url
+			Method to create player object for given server with given youtube url.
 
 		:param server_id: Takes string with server id
 		:param url: Takes youtube solo song or playlist urk
-		:return: Returns generated player object
+		:return: Generated player object
 		"""
 		server = Client.get_server(self.client, server_id)
 		if not server:  # Log cant find server
@@ -99,16 +98,16 @@ class Play:
 
 	#########################################
 	#
-	#   Public memner methods
+	#   Public member methods
 	#
 	#########################################
 	@serverid
 	def get_player(self, server):
 		"""
-			Public method to get player object assotiated with given server from list
+			Public method to get player object assotiated with given server from list.
 
 		:param server: Takes server object ot just server id string
-		:return: Returns player object if exist. Else - None
+		:return: Player object if exist. Else - None
 		"""
 		return self._get_player(server)
 

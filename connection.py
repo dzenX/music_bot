@@ -39,7 +39,7 @@ class Connect:
 		else:
 			voiceClient = Client.voice_client_in(self.client, self.server)
 			if voiceClient.channel == channel:
-				return False
+				return
 			await voiceClient.move_to(channel)
 		return True
 
@@ -58,4 +58,3 @@ class Connect:
 		for channel in server.channels:
 			if str(channel.type) == "voice" and channel.name.lower() == channel_name.lower():
 				return channel
-		return None

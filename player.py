@@ -6,29 +6,48 @@ from utils import valid_server
 
 
 def serverid(func):
-	def wrap(self, server=None, *args, **kwargs):
-		print(server)
-		print(*args, '---', **kwargs)
-		if server:
-			server = valid_server(server)
-		func(self, server=server, *args, **kwargs)
+	"""
+		Decorator for class methods to transform incoming Server object to string with his Server.id.
+		It will search for Server in kwargs: func(server=Server_Obj/Server_Id).
+		If dont exist it'll try to transform first incoming argument except 'self': self.method(server).
+		If first argument isnt Server_Obj it wont change anything.
+		:return: It calls decorated function with changed arguments
+	"""
 
-	return wrap
+	def serverid_wrap(self, *args, **kwargs):
+		server = kwargs.get('server')
+		if not server:
+			if args:
+				argz = list(args)
+				argz[0] = valid_server(argz[0])
+				args = tuple(argz)
+		else:
+			kwargs['server'] = valid_server(server)
+		func(self, *args, **kwargs)
+
+	return serverid_wrap
 
 
 def getplayer(func):
-	def wrap(self, server=None, player=None):
-		print(server, player)
+	"""
+		Decorator for class Play  methods to get 'player' object to function if it accept just 'server' or 'server_id'
+		Itll search for server or player in kwargs if 'player' found  it will just pass it to decorated method.
+		Else if atleast 'server' found, it will use 'get_method' method from class Play to get player
+		and then will pass to decorated method.
+	"""
+
+	def getplayer_wrap(self, *args, **kwargs):
+		server = kwargs.get('server')
+		player = kwargs.get('player')
 		if not player and not server:
 			return
-		elif server:
-			player = self.get_player(valid_server(server))
-			if not player:
-				return
-		print(player)
-		func(self, player=player)
+		elif not player and server:
+			player = self.get_player(server)
+			if player:
+				kwargs['player'] = player
+		func(self, *args, **kwargs)
 
-	return wrap
+	return getplayer_wrap
 
 
 class Play:
@@ -39,48 +58,68 @@ class Play:
 
 	@serverid
 	def get_player(self, server):
-		print(self.Players.get(server))
+		"""
+			Method to get player object assotiated with given server from list
+
+		:param server: Takes server object ot just server id string
+		:return: Player for current server else None
+		"""
 		return self.Players.get(server)
 
 	def _set_player(self, server_id, player):
+		"""
+			Method to save given player assotiated with given server to list
+
+		:param server_id: Takes string with server id
+		:param player:  Takes player object. You can generate it with '_create_player_method'
+		:return: Method cant crash so it will retunr None anyway
+		"""
 		self.Players[server_id] = player
 
 	def _remove_player(self, server_id):
+		"""
+			Method to pop given server player object from list
+
+		:param server_id: Takes string with server id
+		:return: Returns player for given server if poped. Else if server have no player returns None
+		"""
 		return self.Players.pop(server_id, None)
 
-	async def _create_player(self, server_id, url):
+	async def _create_youtube_player(self, server_id, url):
+		"""
+			Method to create player object for given server with given youtube url
+
+		:param server_id: Takes string with server id
+		:param url: Takes Youtube solo song or playlist link
+		:return: Returns generated player object
+		"""
 		server = Client.get_server(self.client, server_id)
 		if not server:  # Log cant find server
 			return
 		return await Client.voice_client_in(self.client, server).create_ytdl_player(url)
 
-	@serverid
+	@getplayer
 	def start(self, server=None, player=None):
-		if not player:
-			player = self.get_player(server)
-			if not player:
-				return False
-		player.start()
-		return True
+		if player:
+			player.start()
+			return True
 
 	@getplayer
 	def stop(self, server=None, player=None):
-		print(server, player)
-		player.stop()
+		if player:
+			player.stop()
+			return True
 
 	@serverid
 	def resume(self, server=None, player=None):
-		if not player:
-			player = self.get_player(server)
-		player.resume()
-
+		if player:
+			player.resume()
+			return True
 	@serverid
 	def pause(self, server=None, player=None):
 		if player:
 			player.pause()
-		else:
-			player = self.get_player(server)
-			player.pause()
+			return True
 
 	@staticmethod
 	async def timer(client, channel):

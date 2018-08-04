@@ -125,7 +125,7 @@ class Settings:
 
 		:param server_id: Takes string with server id
 		:param cfg: Cfg to update server settings from
-		:return: New cfg dictionary file
+		:return: Link to the new cfg dictionary in self.Settings
 		"""
 		cfg = self._add_cfg_to_list(server_id, cfg)
 		self._save_cfg_to_file(server_id, cfg)
@@ -133,7 +133,7 @@ class Settings:
 
 	def _reset_server_settings(self, server_id):
 		"""
-			Method to reset setting associated with gived server id, incuding local files.
+			Method to reset setting associated with given server id, incuding local files.
 
 		:param server_id: Takes string with server id
 		:return: None
@@ -144,7 +144,8 @@ class Settings:
 	@staticmethod
 	def valid_cfg(cfg):
 		"""
-			Method to check if given object is dictionary. If not raises TypeError
+			Method to check if given object is dictionary. If not raises TypeError.
+			Used in public methods to check input.
 
 		:param cfg: Object to check
 		:return: Given object
@@ -159,7 +160,14 @@ class Settings:
 	#
 	#########################################
 	# TODO: Should i check files for settings or just list. If all setting load during init, and all new auto save hm..
+	# TODO: Should i use @serverid deoorator or just valid_server()
 	def get_cfg(self, server):
+		"""
+			Public method to get cfg dictionary associated with given server id.
+
+		:param server: Takes server object ot just server id string
+		:return: Cfg dictionary
+		"""
 		server = valid_server(server)
 		return self._get_cfg_from_list(server)
 
@@ -167,33 +175,78 @@ class Settings:
 	# 	cfg = self._get_cfg_from_file(server)
 
 	def set_cfg(self, server, cfg):
+		"""
+			Public method to set given config dictionary in associate with given server id.
+			This method almost relace existed cfg with new given.
+
+		:param server: Takes server object ot just server id string
+		:param cfg: Takes cfg dictionary
+		:return: Link to the cfg dictionary in the self.Settings
+		"""
 		cfg = self.valid_cfg(cfg)
 		server = valid_server(server)
 		self._reset_server_settings(server)
-		self._update_server_cfg(server, cfg)
+		return self._update_server_cfg(server, cfg)
 
 	def update_cfg(self, server, cfg):
+		"""
+			Public method to update current config dictionary in associate with given server id with new given cfg.
+			This method just update old config with new given.
+
+		:param server: Takes server object ot just server id string
+		:param cfg: Takes cfg dictionary
+		:return: Link to the cfg dictionary in the self.Settings
+		"""
 		cfg = self.valid_cfg(cfg)
 		server = valid_server(server)
-		self._update_server_cfg(server, cfg)
+		return self._update_server_cfg(server, cfg)
 
 	def reset_cfg(self, server):
+		"""
+			Public method to reser settings associated with given server.
+
+		:param server: Takes server object ot just server id string
+		:return: None
+		"""
 		server = valid_server(server)
 		self._reset_server_settings(server)
 
-	def set_attr(self, server, key, value):
-		key = str(key)
+	def set_attr(self, server, attribute, value):
+		"""
+			Public method to set some given attribute in cfg associated with given server to new given value.
+			This method just update old config with new given.
+
+		:param server: Takes server object ot just server id string
+		:param attribute: Takes string with attribute name
+		:param value: Takes new value for given attribute
+		:return: Link to the cfg dictionary in the self.Settings
+		"""
+		attribute = str(attribute)
 		server = valid_server(server)
-		self._update_server_cfg(server, get_dict(key, value))
+		return self._update_server_cfg(server, get_dict(attribute, value))
 
-	def get_attr(self, server, key):
-		key = str(key)
+	def get_attr(self, server, attribute):
+		"""
+			Public method to get the value of some given attribute in cfg associated with given server.
+
+		:param server: Takes server object ot just server id string
+		:param attribute: Takes string with attribute name
+		:return: Value of given attribute if exist, else - None
+		"""
+		attribute = str(attribute)
 		cfg = self.get_cfg(server)
 		if cfg:
-			return cfg.get(key)
+			return cfg.get(attribute)
 
-	def reset_attr(self, server, key):
-		key = str(key)
+	def reset_attr(self, server, attribute):
+		"""
+			Public method to reset the value of some given attribute in cfg associated with given server.
+
+		:param server: Takes server object ot just server id string
+		:param attribute: Takes string with attribute name
+		:return: Value of given attribute if exist, else - None
+		"""
+		attribute = str(attribute)
 		cfg = self.get_cfg(server)
 		if cfg:
-			return cfg.pop(key, None)
+			return cfg.pop(attribute, None)

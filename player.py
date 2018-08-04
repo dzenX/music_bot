@@ -42,7 +42,7 @@ def getplayer(func):
 		if not player and not server:
 			return
 		elif not player and server:
-			player = self.get_player(server)
+			player = self.get_player(valid_server(server))
 			if player:
 				kwargs['player'] = player
 		func(self, *args, **kwargs)
@@ -56,32 +56,31 @@ class Play:
 	def __init__(self, client):
 		self.client = client
 
-	@serverid
-	def get_player(self, server):
+	def _get_player(self, server_id):
 		"""
-			Method to get player object assotiated with given server from list
+			Method to get player object assotiated with given server id from list
 
-		:param server: Takes server object ot just server id string
-		:return: Player for current server else None
+		:param server_id: Takes string with server id
+		:return: Player object assotiated with given server id if exist. Else - None
 		"""
-		return self.Players.get(server)
+		return self.Players.get(server_id)
 
 	def _set_player(self, server_id, player):
 		"""
-			Method to save given player assotiated with given server to list
+			Method to save given player assotiated with given server id to list
 
 		:param server_id: Takes string with server id
 		:param player:  Takes player object. You can generate it with '_create_player_method'
-		:return: Method cant crash so it will retunr None anyway
+		:return: None
 		"""
 		self.Players[server_id] = player
 
 	def _remove_player(self, server_id):
 		"""
-			Method to pop given server player object from list
+			Method to remove player assotiated with given server id object from list
 
 		:param server_id: Takes string with server id
-		:return: Returns player for given server if poped. Else if server have no player returns None
+		:return: Returns player object for given server id if exist. Else - None
 		"""
 		return self.Players.pop(server_id, None)
 
@@ -90,13 +89,28 @@ class Play:
 			Method to create player object for given server with given youtube url
 
 		:param server_id: Takes string with server id
-		:param url: Takes Youtube solo song or playlist link
+		:param url: Takes youtube solo song or playlist urk
 		:return: Returns generated player object
 		"""
 		server = Client.get_server(self.client, server_id)
 		if not server:  # Log cant find server
 			return
 		return await Client.voice_client_in(self.client, server).create_ytdl_player(url)
+
+	#########################################
+	#
+	#   Public memner methods
+	#
+	#########################################
+	@serverid
+	def get_player(self, server):
+		"""
+			Public method to get player object assotiated with given server from list
+
+		:param server: Takes server object ot just server id string
+		:return: Returns player object if exist. Else - None
+		"""
+		return self._get_player(server)
 
 	@getplayer
 	def start(self, server=None, player=None):

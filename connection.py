@@ -22,7 +22,6 @@ class Connect:
 		else:
 			Say.error(1)  # 'You\'re not on the voice channel'
 
-	############################################
 	async def connect_voice_channel_by_name(self, channel_name):
 		channel = self.find_voice_channel(self.server, channel_name)
 		if channel:
@@ -32,7 +31,6 @@ class Connect:
 		else:
 			Say.error(8)  # 'Create such a channel first'
 
-	############################################
 	async def __connect_voice_channel(self, channel):
 		if not self.client.is_voice_connected(self.server):
 			await Client.join_voice_channel(self.client, channel)
@@ -43,14 +41,12 @@ class Connect:
 			await voiceClient.move_to(channel)
 		return True
 
-	############################################
 	async def leave_voice(self):
 		if self.client.is_voice_connected(self.server):
 			voiceClient = Client.voice_client_in(self.client, self.server)
 			await voiceClient.disconnect()
 			return True
 
-	############################################
 	@staticmethod
 	def find_voice_channel(server, channel_name):
 		if isinstance(channel_name, Channel):

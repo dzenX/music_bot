@@ -110,12 +110,13 @@ class Play:
 			player.stop()
 			return True
 
-	@serverid
+	@getplayer
 	def resume(self, server=None, player=None):
 		if player:
 			player.resume()
 			return True
-	@serverid
+
+	@getplayer
 	def pause(self, server=None, player=None):
 		if player:
 			player.pause()

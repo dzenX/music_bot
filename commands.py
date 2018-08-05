@@ -65,14 +65,14 @@ class Command:
 		################
 	}
 
-	async def _cmd_hello(self, *args, **kwargs):
+	async def _cmd_hello(self, **kwargs):
 		author = kwargs['Author']
 		if author.id == '193741119140528129':
 			Say.success('Hello {0.mention}, wanna some anime?'.format(author))
 		else:
 			Say.success('Hello {0.mention}, wanna some music?'.format(author))
 
-	async def _cmd_invite(self, *args, **kwargs):
+	async def _cmd_invite(self):
 		if self.Client.InviteLink:
 			Say.success(self.Client.InviteLink)
 		else:
@@ -88,21 +88,22 @@ class Command:
 			await self._connect_by_author(server, kwargs['Author'])
 
 	@onlyonserver
-	async def _cmd_disconnect(self, *args, **kwargs):
+	async def _cmd_disconnect(self, **kwargs):
 		if not await self.Connect.leave(kwargs['Server']):
 			Say.error(2)  # 'I`m already homeless :('
 
-	async def _cmd_shutdown(self, *args, **kwargs):
-		await self.Client.send_file(self.Client, kwargs['Channel'], 'content\\shutdown.jpg')
-		await self.Client.logout(self.Client)
-		exit(0)
+	async def _cmd_shutdown(self, **kwargs):
+		await self.Client.send_file(kwargs['Channel'], 'content\\shutdown.jpg')
+		await self.Client.logout()
 
-	async def _cmd_reload(self, *args, **kwargs):
+	# exit(0)
+
+	async def _cmd_reload(self, **kwargs):
 		os.system('cls')
 		print('Don`t look there stranger! I`m fucking changi..ahem..reloading, meow!! ')
 		print('------')
-		await self.Client.send_file(self.Client, kwargs['Channel'], 'content\\reload.png')
-		await self.Client.logout(self.Client)
+		await self.Client.send_file(kwargs['Channel'], 'content\\reload.png')
+		await self.Client.logout()
 		os.execl(sys.executable, 'python', 'bot.py', *sys.argv[1:])
 
 	async def _cmd_test(self, *args, **kwargs):

@@ -9,7 +9,8 @@ import yaml
 # TODO: help RUTULIA
 # self = discord.self()
 from commands import Command
-from player import Play
+from connection import Connect
+from player import Player
 from settings import Settings
 from utils import Error, Success
 
@@ -49,8 +50,7 @@ class Main(discord.Client):
 		self.__load_defaults()
 		self.__load_opus()
 		self.__load_token()
-		self.Settings = Settings(self.SettingsFolder)
-		self.Play = Play(self)
+		self.__load_blocks()
 		self.__start_bot()
 
 	""""
@@ -104,7 +104,7 @@ class Main(discord.Client):
 	def __load_token(self):
 		print('[INFO] Trying to load token')
 		if os.path.isfile(self.TokenFile):
-			with open(self.TokenFile, 'r') as file:
+			with open(self.TokenFile) as file:
 				self.Token = file.read()
 			print('[INFO] Token succesfully loaded from token file')
 		else:
@@ -120,6 +120,12 @@ class Main(discord.Client):
 					f.write(token)
 				print("[INFO] Token succesfully saved")
 		print('------')
+
+	def __load_blocks(self):
+		self.Settings = Settings(self.SettingsFolder)
+		self.Player = Player(self)
+		self.Connect = Connect(self)
+		self.Command = Command(self)
 
 	def __start_bot(self, **kwargs):
 		self.loop.run_until_complete(self.start(self.Token, **kwargs))
@@ -148,11 +154,11 @@ class Main(discord.Client):
 
 	async def _command(self, msg):
 		msg_arr = msg.content[len(self.Prefix):].split()
-		ctx = dict(Author=msg.author, Server=msg.server, Channel=msg.channel,
-		           Client=self, Settings=self.Settings, Play=self.Play)
+		ctx = dict(Author=msg.author, Server=msg.server, Channel=msg.channel)
+
 		# TODO Log system should log from here
 		try:
-			await Command(msg_arr, ctx).ex()
+			await self.Command.ex(*msg_arr, **ctx)
 		except Error as e:
 			# TODO: What types of erros ans success messages do we need?(files, embed, etc.)
 			if e.isfile:

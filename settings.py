@@ -10,7 +10,7 @@ class Settings:
 		Class to stoge and control settings for different servers.
 	"""
 
-	Settings = {}  # Store in
+	Settings = {}  # Store in servers setting
 
 
 	def __init__(self, settings_folder):
@@ -60,7 +60,7 @@ class Settings:
 		:return: None
 		"""
 		for file in files:
-			with open(self.SettingsFolder + file, 'r') as f:
+			with open(self.SettingsFolder + file) as f:
 				self._add_cfg_to_list(file[:-4], yaml.load(f))
 
 	def _add_cfg_to_list(self, server_id, cfg):

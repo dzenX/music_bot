@@ -49,7 +49,7 @@ def getplayer(func):
 	return getplayer_wrap
 
 
-class Play:
+class Player:
 	Players = {}
 
 	def __init__(self, client):

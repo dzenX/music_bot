@@ -122,6 +122,7 @@ class Main(discord.Client):
 		print('------')
 
 	def __load_blocks(self):
+		# TODO: Peredacha clienta
 		self.Settings = Settings(self.SettingsFolder)
 		self.Player = Player(self)
 		self.Connect = Connect(self)

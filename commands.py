@@ -7,13 +7,19 @@ from utils import Raise
 
 
 def onlyonserver(func):
-	async def wrap(self, *args, **kwargs):
+	async def onlyonserver_wrap(self, *args, **kwargs):
 		if not kwargs['Server']:
 			Raise.error(22)
 		await func(self, *args, **kwargs)
 
-	return wrap
+	return onlyonserver_wrap
 
+
+def noargs(func):
+	async def noargs_wrap(self, *args, **kwargs):
+		pass
+
+	return noargs_wrap
 
 class Command:
 	def __init__(self, client):
@@ -108,7 +114,6 @@ class Command:
 	@onlyonserver
 	async def _cmd_connect(self, *args, **kwargs):
 		channel_name = ' '.join(args)
-		server = kwargs['Server']
 		if channel_name:
 			await self._connect_by_name(channel_name, **kwargs)
 		else:

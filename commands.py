@@ -1,13 +1,15 @@
 import os
 import sys
 
-from utils import Say
+import discord
+
+from utils import Raise
 
 
 def onlyonserver(func):
 	async def wrap(self, *args, **kwargs):
 		if not kwargs['Server']:
-			Say.error(22)
+			Raise.error(22)
 		await func(self, *args, **kwargs)
 
 	return wrap
@@ -20,16 +22,16 @@ class Command:
 		self.Player = self.Client.Player
 		self.Connect = self.Client.Connect
 
-	async def ex(self, *args, **kwargs):
-		if args:
-			command = self.commands_arr.get(args[0].lower())
+	async def ex(self, msg_arr, ctx):
+		if msg_arr:
+			command = self.commands_arr.get(msg_arr[0].lower())
 			if not command:
-				Say.error(17)  # 'No such command'
+				Raise.error(17)  # 'No such command'
 			command = '_cmd_' + command
-			args = args[1:]
-			await getattr(self, command)(*args, **kwargs)
+			args = msg_arr[1:]
+			await getattr(self, command)(*args, **ctx)
 		else:
-			Say.error(19)  # 'What are you hesitant.. Command me dont be a p&&sy, Meow!'
+			Raise.error(19)  # 'What are you hesitant.. Command me dont be a p&&sy, Meow!'
 
 	commands_arr = {
 		'hello': 'hello',
@@ -65,40 +67,84 @@ class Command:
 		################
 	}
 
-	async def _cmd_hello(self, **kwargs):
+	async def say(self, channel, message=None, **kwargs):
+		embed = kwargs.get('embed')
+		if not message:
+			if not embed:
+				return
+			else:
+				await self.Client.send_message(channel, embed=embed)
+		else:
+			if kwargs.get('file'):
+				await self.Client.send_file(channel, message)
+			else:
+				if not embed:
+					await self.Client.send_message(channel, message)
+				else:
+					color = kwargs.get('color')
+					if color:
+						color = getattr(discord.Color, color)()
+					else:
+						color = discord.Color.green()
+					embed = discord.Embed(color=color, description=message)
+					await self.Client.send_message(channel, embed=embed)
+
+	async def _cmd_hello(self, *args, **kwargs):
 		author = kwargs['Author']
 		if author.id == '193741119140528129':
-			Say.success('Hello {0.mention}, wanna some anime?'.format(author))
+			message = 'Hello {0.mention}, wanna some anime?'
 		else:
-			Say.success('Hello {0.mention}, wanna some music?'.format(author))
+			message = 'Hello {0.mention}, wanna some music?'
+		if args:
+			message += '\nWhat is it? "{}"\nWhat are you taking me for?'.format(', '.join(arg for arg in args))
+		await self.say(kwargs['Channel'], message.format(author))
 
-	async def _cmd_invite(self):
+	async def _cmd_invite(self, *args, **kwargs):
 		if self.Client.InviteLink:
-			Say.success(self.Client.InviteLink)
+			await self.say(kwargs['Channel'], self.Client.InviteLink)
 		else:
-			Say.error(20)  # 'No invite link was provided'
+			Raise.error(20)  # 'No invite link was provided'
 
 	@onlyonserver
 	async def _cmd_connect(self, *args, **kwargs):
 		channel_name = ' '.join(args)
 		server = kwargs['Server']
 		if channel_name:
-			await self._connect_by_name(server, channel_name)
+			await self._connect_by_name(channel_name, **kwargs)
 		else:
-			await self._connect_by_author(server, kwargs['Author'])
+			await self._connect_by_author(**kwargs)
 
 	@onlyonserver
-	async def _cmd_disconnect(self, **kwargs):
+	async def _cmd_disconnect(self, *args, **kwargs):
 		if not await self.Connect.leave(kwargs['Server']):
-			Say.error(2)  # 'I`m already homeless :('
+			Raise.error(2)  # 'I`m already homeless :('
 
-	async def _cmd_shutdown(self, **kwargs):
+	async def _connect_by_author(self, **kwargs):
+		author = kwargs['Author']
+		if author.voice_channel:
+			if not await self.Connect.connect(kwargs['Server'], author.voice_channel):
+				Raise.error(18)  # 'I\'m already with you, my blind kitten, MEOW!'
+				await self.say(kwargs['Channel'], 'I\'m here  ***Summoner***!')
+		else:
+			Raise.error(1)  # 'You\'re not on the voice channel'
+
+	async def _connect_by_name(self, channel_name, **kwargs):
+		server = kwargs['Server']
+		channel = self.Connect.find_voice_channel(server, channel_name)
+		if channel:
+			if not await self.Connect.connect(server, channel):
+				Raise.error(9)  # 'I\'m already here, dont you see me?'
+			await self.say(kwargs['Channel'], 'It\'s been a long way, but I did it')
+		else:
+			Raise.error(8)  # 'Create such a channel first'
+
+	async def _cmd_shutdown(self, *args, **kwargs):
 		await self.Client.send_file(kwargs['Channel'], 'content\\shutdown.jpg')
 		await self.Client.logout()
 
 	# exit(0)
 
-	async def _cmd_reload(self, **kwargs):
+	async def _cmd_reload(self, *args, **kwargs):
 		os.system('cls')
 		print('Don`t look there stranger! I`m fucking changi..ahem..reloading, meow!! ')
 		print('------')
@@ -234,19 +280,4 @@ class Command:
 	# 		await self.send_message(msg.channal, cfg)
 	#
 	# ############################################
-	async def _connect_by_author(self, server, author):
-		if author.voice_channel:
-			if not await self.Connect.connect(server, author.voice_channel):
-				Say.error(18)  # 'I\'m already with you, my blind kitten, MEOW!'
-			Say.success('I\'m here  ***Summoner***!')
-		else:
-			Say.error(1)  # 'You\'re not on the voice channel'
 
-	async def _connect_by_name(self, server, channel_name):
-		channel = self.Connect.find_voice_channel(server, channel_name)
-		if channel:
-			if not await self.Connect.connect(server, channel):
-				Say.error(9)  # 'I\'m already here, dont you see me?'
-			Say.success('It\'s been a long way, but I did it')
-		else:
-			Say.error(8)  # 'Create such a channel first'

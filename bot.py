@@ -12,7 +12,7 @@ from commands import Command
 from connection import Connect
 from player import Player
 from settings import Settings
-from utils import Error, Success
+from utils import Error
 
 """"
 	Settings for creating youtube stream
@@ -158,21 +158,13 @@ class Main(discord.Client):
 
 		# TODO Log system should log from here
 		try:
-			await self.Command.ex(*msg_arr, **ctx)
+			await self.Command.ex(msg_arr, ctx)
 		except Error as e:
 			# TODO: What types of erros ans success messages do we need?(files, embed, etc.)
 			if e.isfile:
 				await self.send_file(msg.channel, str(e))
 			elif e.embed:
 				embed = discord.Embed(color=discord.Color.red(), description=str(e))
-				await self.send_message(msg.channel, embed=embed)
-			else:
-				await self.send_message(msg.channel, str(e))
-		except Success as e:
-			if e.isfile:
-				await self.send_file(msg.channel, str(e))
-			elif e.embed:
-				embed = discord.Embed(color=discord.Color.green(), description=str(e))
 				await self.send_message(msg.channel, embed=embed)
 			else:
 				await self.send_message(msg.channel, str(e))

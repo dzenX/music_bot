@@ -17,13 +17,7 @@ class Error(Exception):
 # 	return self.message
 
 
-class Success(Exception):
-	def __init__(self, message, content=None, embed=False, file=False):
-		self.message = message
-		self.content = content  # This field will be provided to log system
-		self.embed = embed
-		self.isfile = file
-		self.time = datetime.now()
+
 
 
 # def __str__(self):
@@ -31,7 +25,7 @@ class Success(Exception):
 
 # TODO: System like positive errcode = success message and negative like err, so just one class for raise
 # It can just choose embed or not and emb.color depends on err_code
-class Say:
+class Raise:
 	# TODO: Make __errors dict like: {'1': ['message','content']} so we can log 'content' with log system
 	# TODO: 'content' should be like [ERROR] on server blabla with command blabla, cant do blabla
 	__errors = {
@@ -63,11 +57,6 @@ class Say:
 	def error(cls, code):
 		message = cls.__errors.get(str(code), 'Unknown error')
 		raise Error(message)
-
-	@classmethod
-	def success(cls, message, *args):
-		raise Success(message, *args)
-
 
 def silent_remove(filename):
 	try:

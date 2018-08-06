@@ -67,7 +67,9 @@ class Song:
 class Playlist:
 	Songs = []
 
-	def __init__(self, id, name=None):
+	def __init__(self, id, name=None, songs=None):
+		if songs:
+			self.Songs = songs
 		self.name = name
 		self.id = id
 
@@ -99,8 +101,11 @@ class Playlist:
 class PlaylistControl:
 	Lists = {}
 
-	def __init__(self):
-		pass
+	def __init__(self, lists=None):
+		if not lists:
+			self.Lists = {}
+		else:
+			self.Lists = lists
 
 	def _get_min_free_id(self):
 		seq = [x['the_key'] for x in self.Lists]

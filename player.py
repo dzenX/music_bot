@@ -27,33 +27,33 @@ def serverid(func):
 	return serverid_wrap
 
 
-def getplayer(func):
-	"""
-		Decorator for class Play  methods to get 'player' object to function if it accept just 'server' or 'server_id'.
-		Itll search for server or player in kwargs if 'player' found  it will just pass it to decorated method.
-		Else if atleast 'server' found, it will use 'get_method' method from class Play to get player
-		and then will pass to decorated method.
-	"""
-
-	def getplayer_wrap(self, *args, **kwargs):
-		server = kwargs.get('server')
-		player = kwargs.get('player')
-		if not player and not server:
-			return
-		elif not player and server:
-			player = self.get_player(valid_server(server))
-			if player:
-				kwargs['player'] = player
-		func(self, *args, **kwargs)
-
-	return getplayer_wrap
+# def getplayer(func):
+# 	"""
+# 		Decorator for class Play  methods to get 'player' object to function if it accept just 'server' or 'server_id'.
+# 		Itll search for server or player in kwargs if 'player' found  it will just pass it to decorated method.
+# 		Else if atleast 'server' found, it will use 'get_method' method from class Play to get player
+# 		and then will pass to decorated method.
+# 	"""
+#
+# 	def getplayer_wrap(self, *args, **kwargs):
+# 		server = kwargs.get('server')
+# 		player = kwargs.get('player')
+# 		if not player and not server:
+# 			return
+# 		elif not player and server:
+# 			player = self.get_player(valid_server(server))
+# 			if player:
+# 				kwargs['player'] = player
+# 		func(self, *args, **kwargs)
+#
+# 	return getplayer_wrap
 
 
 class Player:
 	Players = {}
 
 	def __init__(self, client):
-		self.client = client
+		self.Client = client
 
 	def _get_player(self, server_id):
 		"""
@@ -91,16 +91,17 @@ class Player:
 		:param url: Takes youtube solo song or playlist urk
 		:return: Generated player object
 		"""
-		server = Client.get_server(self.client, server_id)
+		server = self.Client.get_server(server_id)
 		if not server:  # Log cant find server
 			return
-		return await Client.voice_client_in(self.client, server).create_ytdl_player(url)
+		return await self.Client.voice_client_in(server).create_ytdl_player(url)
 
 	#########################################
 	#
 	#   Public member methods
 	#
 	#########################################
+
 	@serverid
 	def get_player(self, server):
 		"""
@@ -111,29 +112,57 @@ class Player:
 		"""
 		return self._get_player(server)
 
-	@getplayer
-	def start(self, server=None, player=None):
-		if player:
-			player.start()
-			return True
+	def _start(self, server_id):
+		self._get_player(server_id).start()
 
-	@getplayer
-	def stop(self, server=None, player=None):
-		if player:
-			player.stop()
-			return True
+	def _stop(self, server_id):
+		self._get_player(server_id).stop()
 
-	@getplayer
-	def resume(self, server=None, player=None):
-		if player:
-			player.resume()
-			return True
+	def _resume(self, server_id):
+		self._get_player(server_id).resume()
 
-	@getplayer
-	def pause(self, server=None, player=None):
+	def _pause(self, server_id):
+		self._get_player(server_id).pause()
+
+	def start(self, server):
+		player = self._get_player(valid_server(server))
 		if player:
-			player.pause()
-			return True
+			try:
+				player.start()
+			except:
+				return
+			else:
+				return True
+
+	def stop(self, server):
+		player = self._get_player(valid_server(server))
+		if player:
+			try:
+				player.stop()
+			except:
+				return
+			else:
+				return True
+
+	def resume(self, server):
+		player = self._get_player(valid_server(server))
+		if player:
+			try:
+				player.resume()
+			except:
+				return
+			else:
+				return True
+
+	def pause(self, server):
+		player = self._get_player(valid_server(server))
+		if player:
+			try:
+				player.pause()
+			except:
+				return
+			else:
+				return True
 
 	@staticmethod
 	async def timer(client, channel):

@@ -1,4 +1,4 @@
-
+# TODO: Maybe just 3 functions should be there ? hmm..
 class Connect:
 	def __init__(self, client):
 		self.Client = client
@@ -40,6 +40,7 @@ class Connect:
 		:param channel: Takes voice channel object
 		:return: True if connected or moved to another, else - None
 		"""
+		# TODO Do we need this check if in commands we throw exception if smth wrong
 		if not self.Client.is_voice_connected(server):
 			await self.Client.join_voice_channel(channel)
 		else:

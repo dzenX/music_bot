@@ -57,11 +57,11 @@ class Command:
 		# ################
 		'play': 'play',
 		# ################
-		# 'pause': 'pause',
-		# 'resume': 'resume',
-		# 'stop': 'stop',
-		# 'volume': 'volume',
-		# 'now': 'now',
+		'pause': 'pause',
+		'resume': 'resume',
+		'stop': 'stop',
+		'volume': 'volume',
+		'now': 'now',
 		# ################
 		# 'loop': 'loop',
 		# ################
@@ -69,9 +69,8 @@ class Command:
 		'rel': 'reload',
 		'relaod': 'reload',
 		# ################
-		# 'set': 'set_settings',
-		# 'settings': 'show_settings',
-		# 'reset': 'reset_settings',
+		'settings': 'show_settings',
+		'reset': 'reset_settings',
 		# ################
 		't': 'test',
 		'help': 'help'
@@ -148,7 +147,7 @@ class Command:
 		await self.say(kwargs['Channel'], message.format(author))
 
 	@noargs
-	async def _cmd_help(self, *args, **kwargs):
+	async def _cmd_help(self, **kwargs):
 		channel = kwargs['Channel']
 		await self.say(channel, 'I\'m powerful enough to do this:\n')
 		message = '\n'.join('***' + self.Client.Prefix + key + ' ***: ' + self.commands_descr.get(key, "Can't help")
@@ -211,6 +210,7 @@ class Command:
 	async def _cmd_test(self, *args, **kwargs):
 		print('I got: ', args, ' and a bit of: ', kwargs)
 		server = kwargs['Server']
+		self.g = server
 
 	@onlyonserver
 	async def _cmd_play(self, *args, **kwargs):
@@ -230,112 +230,93 @@ class Command:
 		await self.Player.timer(kwargs['Channel'], 10)
 		player.start()
 
+	@onlyonserver
+	@noargs
+	async def _cmd_stop(self, **kwargs):
+		player = self.Player.get_player(kwargs['Server'])
+		if player:
+			player.stop()
+		else:
+			Raise.error(4)  # 'Nothing is being played'
 
+	@onlyonserver
+	async def _cmd_volume(self, *args, **kwargs):
+		if args:
+			try:
+				v = float(args[0])
+			except:
+				Raise.error(7)  # 'Not valid volume value'
+			else:
+				if v > 2:
+					Raise.error(11)  # 'RIP ears'
+					v = 2
+				elif v < 0:
+					Raise.error(16)  # 'Is there life below 0?'
+					v = 0
+				server = kwargs['Server']
+				player = self.Player.get_player(server)
+				self.Settings.set_attr(server, 'Volume', v)
+				if player:
+					player.volume = v
+		else:
+			Raise.error(10)  # 'Invalid params, just like you'
 
+	@onlyonserver
+	@noargs
+	async def _cmd_now(self, **kwargs):
+		player = self.Player.get_player(kwargs['Server'])
+		if player:
+			minutes = player.duration // 60
+			seconds = player.duration % 60
+			message = 'Now plaing:\n\t"{}"\t({}:{}).\nUploaded by:\n\t"{}"\nUrl:\n\t{}'
+			message.format(player.title, minutes, seconds, player.uploader, player.url)
+			await self.say(kwargs['Channel'], message)
+		else:
+			Raise.error(4)  # 'Nothing is being played'
 
-	# ############################################
-	# async def cmd_stop(self, *args, **kwargs):
-	# 	msg = kwargs.get('msg')
-	# 	player = await self.get_server_player(msg.server.id)
-	# 	if player:
-	# 		player.stop()
-	# 	else:
-	# 		await self.error(4, msg)  # 'Nothing is being played'
-	#
-	# ############################################
+	@onlyonserver
+	@noargs
+	async def _cmd_pause(self, **kwargs):
+		player = self.Player.get_player(kwargs['Server'])
+		if player:
+			if player.is_done():
+				Raise.error(13)  # 'Your song already ended'
+			elif not player.is_playing():
+				Raise.error(15)  # 'The song is already paused, dont you hear this quality silence?'
+			else:
+				player.pause()
+		else:
+			Raise.error(4)  # 'Nothing is being played'
 
-	# ############################################
-	# # TODO: Check param method
-	# async def cmd_volume(self, *args, **kwargs):
-	# 	msg = kwargs.get('msg')
-	# 	if args:
-	# 		try:
-	# 			v = float(args[0])
-	# 		except:
-	# 			await self.error(7, msg)  # 'Not valid volume value'
-	# 		else:
-	# 			if v > 2:
-	# 				await self.error(11, msg)  # 'RIP ears'
-	# 				v = 2
-	# 			elif v < 0:
-	# 				await self.error(16, msg)  # 'Is there life below 0?'
-	# 				v = 0
-	# 			self.set_attributes(msg.server.id, Volume=v)
-	# 			player = await self.get_server_player(msg.server.id)
-	# 			if player:
-	# 				player.volume = v
-	# 	else:
-	# 		await self.error(10, msg)  # 'Invalid params, just like you'
-	#
-	# ############################################
-	# async def cmd_now(self, *args, **kwargs):
-	# 	msg = kwargs.get('msg')
-	# 	player = await self.get_server_player(msg.server.id)
-	# 	if player:
-	# 		minutes = player.duration // 60
-	# 		seconds = player.duration % 60
-	# 		message = 'Now plaing:\n\t"{}"\t({}:{}).\nUploaded by:\n\t"{}"\nUrl:\n\t{}'
-	# 		message = message.format(player.title, minutes, seconds, player.uploader, player.url)
-	# 		await self.send_message(msg.channel, message)
-	# 	else:
-	# 		await self.error(4, msg)  # 'Nothing is being played'
-	#
-	# ############################################
-	# async def cmd_pause(self, *args, **kwargs):
-	# 	msg = kwargs.get('msg')
-	# 	player = await self.get_server_player(msg.server.id)
-	# 	if player:
-	# 		if player.is_done():
-	# 			await self.error(13, msg)  # 'Your song already ended'
-	# 		elif not player.is_playing():
-	# 			await self.error(15, msg)  # 'The song is already paused, dont you hear this quality silence?'
-	# 		else:
-	# 			player.pause()
-	# 	else:
-	# 		await self.error(4, msg)  # 'Nothing is being played'
-	#
-	# ############################################
-	# async def cmd_resume(self, *args, **kwargs):
-	# 	msg = kwargs.get('msg')
-	# 	player = await self.get_server_player(msg.server.id)
-	# 	if player:
-	# 		if player.is_done():
-	# 			await self.error(13, msg)  # 'Your song already ended'
-	# 		elif player.is_playing():
-	# 			await self.error(14, msg)  # 'The song is already playing, dont you hear?'
-	# 		else:
-	# 			player.resume()
-	# 	else:
-	# 		await self.error(4, msg)  # 'Nothing is being played'
-	#
-	# ############################################
+	@onlyonserver
+	@noargs
+	async def _cmd_resume(self, **kwargs):
+		player = self.Player.get_player(kwargs['Server'])
+		if player:
+			if player.is_done():
+				Raise.error(13)  # 'Your song already ended'
+			elif player.is_playing():
+				Raise.error(14)  # 'The song is already playing, dont you hear?'
+			else:
+				player.resume()
+		else:
+			Raise.error(4)  # 'Nothing is being played'
 
-	# ############################################
+	# @onlyonserver
 	# async def cmd_loop(self, *args, **kwargs):
 	# 	pass
-	#
-	# ############################################
-	# # TODO: Make it userfriendly
-	# async def cmd_set_settings(self, *args, **kwargs):
-	# 	msg = kwargs.get('msg')
-	# 	cfg = {}
-	# 	for arg in args:
-	# 		cfg.update(self.get_dict(*arg.split(':')))
-	# 	self.set_attributes(msg.server.id, **cfg)
-	#
-	# ############################################
-	# async def cmd_reset_settings(self, *args, **kwargs):
-	# 	msg = kwargs.get('msg')
-	# 	self.reset_settings(msg.server.id)
-	#
-	# ############################################
-	# async def cmd_show_settings(self, *args, **kwargs):
-	# 	msg = kwargs.get('msg')
-	# 	cfg = self.get_cfg_from_list(msg.server_id)
-	# 	if not cfg:
-	# 		await self.error(21, msg)  # 'No setting saved for your server'
-	# 	else:
-	# 		await self.send_message(msg.channal, cfg)
-	#
-	# ############################################
+	@onlyonserver
+	@noargs
+	async def _cmd_reset_settings(self, **kwargs):
+		self.Settings.reset_cfg(kwargs['Server'])
 
+	@onlyonserver
+	@noargs
+	async def _cmd_show_settings(self, **kwargs):
+		server = kwargs['Server']
+		cfg = self.Settings.get_cfg(server)
+		if not cfg:
+			Raise.error(21)  # 'No setting saved for your server'
+		message = 'Setting saved for server {}\n'.format(server)
+		message += '\n'.join(key + ' : ' + str(value) for key, value in cfg.items())
+		await self.say(kwargs['Channel'], message)

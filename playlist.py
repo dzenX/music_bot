@@ -1,26 +1,16 @@
 from random import random
 
-
-def prop_deco(func):
-	def prop_deco_wrap(self, *args, **kwargs):
-		func(self, *args, **kwargs)
-		return self.ctx.get(func.__name__)
-
-	return prop_deco_wrap
-
-
 class Song:
 	def __init__(self, url=None):
 		self.url = url
+		self._download()
 		self._skip = False
-		self.ctx = self._download()
+		self._downloaded = False
+		self.is_playing = False
+		self._ctx = {}
 		self.buffer = None
 		self.description = self._get_description()
-		self.player = self._get_player()
 
-	def start(self):
-		if not self.skip:
-			self.player.start()
 
 	@property
 	def skip(self):
@@ -30,15 +20,18 @@ class Song:
 	def skip(self, value: bool = True):
 		self._skip = value
 
-	@prop_deco
 	@property
 	def name(self):
-		return
+		return self._ctx.get('name')
 
-	@prop_deco
 	@property
 	def duration(self):
-		return
+		return self._ctx.get('duration')
+
+	@property
+	def ready(self):
+		return True if self._downloaded and not self.is_playing else False
+
 
 	def _download(self):
 		"""
@@ -46,7 +39,13 @@ class Song:
 
 		:return: Dictionary with all downloaded info
 		"""
-		return 1
+		if not self.skip:
+			pass
+		pass
+		self.buffer = None
+		self.ctx = {}
+		self._downloaded = True
+		return
 
 	def _get_description(self):
 		"""
@@ -55,13 +54,11 @@ class Song:
 
 		:return: String with all info
 		"""
-		return 1
+		return ''
 
 	def __str__(self):
 		return self.description
 
-	def _get_player(self):
-		return
 
 
 class Playlist:

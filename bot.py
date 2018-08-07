@@ -1,5 +1,3 @@
-# import youtube_dl it was unused btw
-# import asyncio
 import os
 from datetime import datetime
 
@@ -55,7 +53,8 @@ class Main(discord.Client):
 
 	""""
 		Default settings for bot in case
-		there is no config file
+		there is no config file or needed parameters in.
+		
 	"""
 	Defaults = {
 		'SettingsFolder': 'settings',
@@ -69,6 +68,10 @@ class Main(discord.Client):
 	}
 
 	def __load_defaults(self):
+		"""
+			Loading parameters from config, if config dont provide value, takes it from self.Defaults.
+
+		"""
 		print('[INFO] Loading default settings')
 		mode = 'r' if os.path.isfile(self.Defaults['ConfigFile']) else 'w+'
 		with open('config.yml', mode) as file:
@@ -87,7 +90,8 @@ class Main(discord.Client):
 
 	def __load_opus(self):
 		""""
-			Loading codec
+			Loading voice codec.
+
 		"""
 		print('[INFO] Trying to load OpusLib:')
 		if not discord.opus.is_loaded():
@@ -102,6 +106,12 @@ class Main(discord.Client):
 		print('------')
 
 	def __load_token(self):
+		"""
+			Loading token from filename provided by settings,
+			else it will try to brngs it extractly from config.
+			If no token will be founded, it will ask u to input it manually to save it in token file.
+
+		"""
 		print('[INFO] Trying to load token')
 		if os.path.isfile(self.TokenFile):
 			with open(self.TokenFile) as file:
@@ -122,13 +132,22 @@ class Main(discord.Client):
 		print('------')
 
 	def __load_blocks(self):
-		# TODO: Peredacha clienta
+		"""
+			Initialization of main functionality blocks of bot.
+
+		"""
+		# TODO: Providing client to main functionality blocks seems not really good ;( "Peredacha clienta"
 		self.Settings = Settings(self.SettingsFolder)
 		self.Player = Player(self)
 		self.Connect = Connect(self)
 		self.Command = Command(self)
 
 	def __start_bot(self, **kwargs):
+		"""
+			Starting 
+		:param kwargs:
+		:return:
+		"""
 		self.loop.run_until_complete(self.start(self.Token, **kwargs))
 
 	async def on_ready(self):

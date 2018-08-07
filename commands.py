@@ -3,7 +3,7 @@ import sys
 
 import discord
 
-from utils import Raise
+from utils import Raise, is_youtube_link
 
 
 def onlyonserver(func):
@@ -17,7 +17,10 @@ def onlyonserver(func):
 
 def noargs(func):
 	async def noargs_wrap(self, *args, **kwargs):
-		pass
+		if args:
+			message = 'What is it? "{}"\nWhat are you taking me for?'
+			await self.say(kwargs['Channel'], message.format(', '.join(arg for arg in args)))
+		await func(self, **kwargs)
 
 	return noargs_wrap
 
@@ -95,17 +98,18 @@ class Command:
 					embed = discord.Embed(color=color, description=message)
 					await self.Client.send_message(channel, embed=embed)
 
-	async def _cmd_hello(self, *args, **kwargs):
+	@noargs
+	async def _cmd_hello(self, **kwargs):
 		author = kwargs['Author']
 		if author.id == '193741119140528129':
 			message = 'Hello {0.mention}, wanna some anime?'
 		else:
 			message = 'Hello {0.mention}, wanna some music?'
-		if args:
-			message += '\nWhat is it? "{}"\nWhat are you taking me for?'.format(', '.join(arg for arg in args))
+
 		await self.say(kwargs['Channel'], message.format(author))
 
-	async def _cmd_invite(self, *args, **kwargs):
+	@noargs
+	async def _cmd_invite(self, **kwargs):
 		if self.Client.InviteLink:
 			await self.say(kwargs['Channel'], self.Client.InviteLink)
 		else:
@@ -115,41 +119,40 @@ class Command:
 	async def _cmd_connect(self, *args, **kwargs):
 		channel_name = ' '.join(args)
 		if channel_name:
-			await self._connect_by_name(channel_name, **kwargs)
+			if not await self._connect_by_name(channel_name, **kwargs):
+				Raise.error(9)  # 'I\'m already here, dont you see me?'
+			await self.say(kwargs['Channel'], 'It\'s been a long way, but I did it')
 		else:
-			await self._connect_by_author(**kwargs)
+			if not await self._connect_by_author(**kwargs):
+				Raise.error(18)  # 'I\'m already with you, my blind kitten, MEOW!'
+			await self.say(kwargs['Channel'], 'I\'m here  ***Summoner***!')
 
 	@onlyonserver
-	async def _cmd_disconnect(self, *args, **kwargs):
+	@noargs
+	async def _cmd_disconnect(self, **kwargs):
 		if not await self.Connect.leave(kwargs['Server']):
 			Raise.error(2)  # 'I`m already homeless :('
 
 	async def _connect_by_author(self, **kwargs):
 		author = kwargs['Author']
-		if author.voice_channel:
-			if not await self.Connect.connect(kwargs['Server'], author.voice_channel):
-				Raise.error(18)  # 'I\'m already with you, my blind kitten, MEOW!'
-				await self.say(kwargs['Channel'], 'I\'m here  ***Summoner***!')
-		else:
+		if not author.voice_channel:
 			Raise.error(1)  # 'You\'re not on the voice channel'
+		return await self.Connect.connect(kwargs['Server'], author.voice_channel)
 
 	async def _connect_by_name(self, channel_name, **kwargs):
 		server = kwargs['Server']
 		channel = self.Connect.find_voice_channel(server, channel_name)
-		if channel:
-			if not await self.Connect.connect(server, channel):
-				Raise.error(9)  # 'I\'m already here, dont you see me?'
-			await self.say(kwargs['Channel'], 'It\'s been a long way, but I did it')
-		else:
+		if not channel:
 			Raise.error(8)  # 'Create such a channel first'
+		return not await self.Connect.connect(server, channel)
 
-	async def _cmd_shutdown(self, *args, **kwargs):
+	@noargs
+	async def _cmd_shutdown(self, **kwargs):
 		await self.Client.send_file(kwargs['Channel'], 'content\\shutdown.jpg')
 		await self.Client.logout()
 
-	# exit(0)
-
-	async def _cmd_reload(self, *args, **kwargs):
+	@noargs
+	async def _cmd_reload(self, **kwargs):
 		os.system('cls')
 		print('Don`t look there stranger! I`m fucking changi..ahem..reloading, meow!! ')
 		print('------')
@@ -161,25 +164,27 @@ class Command:
 		print('I got: ', args, ' and a bit of: ', kwargs)
 		server = kwargs['Server']
 
-	# async def _cmd_play(self):
-	# 	if self.args:
-	# 		url = self.args[0]
-	# 		client = self.ctx['Client']
-	# 		server = self.ctx['Server']
-	# 		connect = self.ctx['Connect']
-	# 		if is_youtube_link(url):
-	# 			if Client.is_voice_connected(client, server):
-	# 				await self.start_solo_song(msg, url)
-	# 			else:
-	# 				await self.connect_voice_channel_by_author(msg)
-	# 				await self.start_solo_song(msg, url)
-	# 		# else:
-	# 		#	await self.Error(6, msg) # 'It`s not a single song!'
-	# 		else:
-	# 			await self.error(5, msg)  # 'Not valid link'
-	# 	else:
-	# 		await self.error(12, msg)  # 'Enter this f*&*ing song url here. Don\'t make me nervous, you mongol kid.'
-	#
+	@onlyonserver
+	async def _cmd_play(self, *args, **kwargs):
+		if args:
+			url = args[0]
+			if is_youtube_link(url):
+				if not self.Client.is_voice_connected(kwargs['Server']):
+					await self._connect_by_author(**kwargs)
+				await self._start_solo_song(url, **kwargs)
+			else:
+				Raise.error(5)  # 'Not valid link'
+		else:
+			Raise.error(12)  # 'Enter this f*&*ing song url here. Don\'t make me nervous, you mongol kid.'
+
+	async def _start_solo_song(self, url, **kwargs):
+		player = self.Player.create_youtube_player(kwargs['Server'], url)
+		await self.Player.timer(kwargs['Channel'], 10)
+		player.start()
+
+
+
+
 	# ############################################
 	# async def cmd_stop(self, *args, **kwargs):
 	# 	msg = kwargs.get('msg')

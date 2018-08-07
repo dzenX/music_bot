@@ -1,4 +1,3 @@
-from discord import Channel, Server
 
 class Connect:
 	def __init__(self, client):
@@ -17,21 +16,20 @@ class Connect:
 		:param server: Takes server object
 		:return: True if leaved, None if already not connected
 		"""
-		if isinstance(server, Server) and self.Client.is_voice_connected(server):
-			await self.Client.voice_client_in(server).disconnect()
-			return True
+		# if isinstance(server, Server) and self.Client.is_voice_connected(server):
+		return await self.Client.voice_client_in(server).disconnect()
 
-	async def connect(self, server, channel):
-		"""
-			Public method to connect to given voice channel on given server.
-			It checks if arguments are valid
-
-		:param server: Takes server object
-		:param channel: Takes voice channel object
-		:return: True if connected or moved to another, else - None
-		"""
-		if isinstance(server, Server) and isinstance(channel, Channel):
-			return await self._connect(server, channel)
+	# async def connect(self, server, channel):
+	# 	"""
+	# 		Public method to connect to given voice channel on given server.
+	# 		It checks if arguments are valid
+	#
+	# 	:param server: Takes server object
+	# 	:param channel: Takes voice channel object
+	# 	:return: True if connected or moved to another, else - None
+	# 	"""
+	# 	if isinstance(server, Server) and isinstance(channel, Channel):
+	# 		return await self._connect(server, channel)
 
 	@staticmethod
 	def find_voice_channel(server, channel_name):
@@ -46,7 +44,7 @@ class Connect:
 			if str(channel.type) == "voice" and channel.name.lower() == channel_name.lower():
 				return channel
 
-	async def _connect(self, server, channel):
+	async def connect(self, server, channel):
 		"""
 			Method to connect to given voice channel on given server
 

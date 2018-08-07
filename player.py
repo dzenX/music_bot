@@ -1,7 +1,5 @@
 import asyncio
 
-from discord import Client
-
 from utils import valid_server
 
 
@@ -83,17 +81,14 @@ class Player:
 		"""
 		return self.Players.pop(server_id, None)
 
-	async def _create_youtube_player(self, server_id, url):
+	async def create_youtube_player(self, server, url):
 		"""
 			Method to create player object for given server with given youtube url.
 
-		:param server_id: Takes string with server id
+		:param server: Takes string with server object
 		:param url: Takes youtube solo song or playlist urk
 		:return: Generated player object
 		"""
-		server = self.Client.get_server(server_id)
-		if not server:  # Log cant find server
-			return
 		return await self.Client.voice_client_in(server).create_ytdl_player(url)
 
 	def _start(self, server_id):
@@ -210,15 +205,14 @@ class Player:
 		"""
 		return self._action(valid_server(server), 'pause')
 
-	@staticmethod
-	async def timer(client, channel):
-		message = 'Your song starts in: 10'
-		curr_msg = await Client.send_message(client, channel, message)
-		for i in range(1, 10):
+	async def timer(self, channel, time):
+		message = 'Your song starts in: {}'.format(time)
+		curr_msg = await self.Client.send_message(channel, message)
+		for i in range(1, time):
 			await asyncio.sleep(1)
-			message = 'Your song starts in: {}'.format(10 - i)
-			await Client.edit_message(client, curr_msg, message)
+			message = 'Your song starts in: {}'.format(time - i)
+			await self.Client.edit_message(curr_msg, message)
 		await asyncio.sleep(1)
 		message = 'BOOOOOOOM!!!!'
-		await Client.edit_message(client, curr_msg, message)
-		await Client.delete_message(client, curr_msg)
+		await self.Client.edit_message(curr_msg, message)
+		await self.Client.delete_message(curr_msg)

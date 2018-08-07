@@ -18,7 +18,7 @@ def onlyonserver(func):
 def noargs(func):
 	async def noargs_wrap(self, *args, **kwargs):
 		if args:
-			message = 'What is it? "{}"\nWhat are you taking me for?'
+			message = 'What is it? "{}"\nWhat are you taking me for? But anyway i will do my shit work..\n'
 			await self.say(kwargs['Channel'], message.format(', '.join(arg for arg in args)))
 		await func(self, **kwargs)
 
@@ -67,14 +67,53 @@ class Command:
 		# ################
 		'reload': 'reload',
 		'rel': 'reload',
+		'relaod': 'reload',
 		# ################
 		# 'set': 'set_settings',
 		# 'settings': 'show_settings',
 		# 'reset': 'reset_settings',
 		# ################
 		't': 'test',
+		'help': 'help'
 		################
 	}
+
+	commands_descr = {
+		'hello': 'Say hello to bot',
+		'invite': 'Invite link for bot',
+		################
+		'connect': 'Connect bot to voice channel you are in, or to mentioned voice channel',
+		'summon': 'Same as connect, but created for cute guys',
+		################
+		'disconnect': 'Disconnects from current voice channel',
+		'gtfo': 'Same as connect, but created for REAL GANSTA\'S',
+		################
+		'kys': 'Turns off the bot with WITH REAL HATE',
+		'shutdown': 'Turns off the bot',
+		################
+		'play': 'Plays song',
+		################
+		'pause': 'Pausing current playing song',
+		'resume': 'Resumes current stopped song',
+		'stop': 'Stops playing song',
+		'volume': 'Regulate volume',
+		'now': 'Shows current song',
+		################
+		'loop': 'Loops song',
+		################
+		'reload': 'Reloads bot',
+		'rel': 'Reloads bot for lazy people',
+		'relaod': 'Reloads bot for some iq braindead people',
+		################
+		'set': 'Sets bot settings',
+		'settings': 'Shows bot settings',
+		'reset': 'Resets bot settigs',
+		################
+		# 't': 'cmd_test',
+		################
+		'help': 'Shows this to you',
+	}
+
 
 	async def say(self, channel, message=None, **kwargs):
 		embed = kwargs.get('embed')
@@ -107,6 +146,15 @@ class Command:
 			message = 'Hello {0.mention}, wanna some music?'
 
 		await self.say(kwargs['Channel'], message.format(author))
+
+	@noargs
+	async def _cmd_help(self, *args, **kwargs):
+		channel = kwargs['Channel']
+		await self.say(channel, 'I\'m powerful enough to do this:\n')
+		message = '\n'.join('***' + self.Client.Prefix + key + ' ***: ' + self.commands_descr.get(key, "Can't help")
+		                    for key in self.commands_arr)
+		await self.say(channel, message)
+		await self.say(channel, 'Choose your way stranger, and may the force be with you!')
 
 	@noargs
 	async def _cmd_invite(self, **kwargs):

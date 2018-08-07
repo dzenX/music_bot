@@ -145,8 +145,7 @@ class Main(discord.Client):
 	def __start_bot(self, **kwargs):
 		"""
 			Starting 
-		:param kwargs:
-		:return:
+
 		"""
 		self.loop.run_until_complete(self.start(self.Token, **kwargs))
 
@@ -180,10 +179,7 @@ class Main(discord.Client):
 		try:
 			await self.Command.ex(msg_arr, ctx)
 		except Error as e:
-			# TODO: What types of erros ans success messages do we need?(files, embed, etc.)
-			if e.isfile:
-				await self.send_file(msg.channel, str(e))
-			elif e.embed:
+			if e.embed:
 				embed = discord.Embed(color=discord.Color.red(), description=str(e))
 				await self.send_message(msg.channel, embed=embed)
 			else:

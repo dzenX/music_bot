@@ -5,26 +5,12 @@ from discord import Server
 
 
 class Error(Exception):
-	def __init__(self, message, content=None, embed=True, file=False):
+	def __init__(self, message, content=None, embed=True):
 		self.message = message
 		self.content = content  # This field will be provided to log system
 		self.embed = embed
-		self.isfile = file
 		self.time = datetime.now()
 
-
-# def __str__(self):
-# 	return self.message
-
-
-
-
-
-# def __str__(self):
-# 	return self.message
-
-# TODO: System like positive errcode = success message and negative like err, so just one class for raise
-# It can just choose embed or not and emb.color depends on err_code
 class Raise:
 	# TODO: Make __errors dict like: {'1': ['message','content']} so we can log 'content' with log system
 	# TODO: 'content' should be like [ERROR] on server blabla with command blabla, cant do blabla
@@ -66,7 +52,6 @@ def silent_remove(filename):
 
 
 def get_dict(key, value):
-	# noinspection PyBroadException
 	try:
 		result = float(value)
 	except:

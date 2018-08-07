@@ -3,50 +3,6 @@ import asyncio
 from utils import valid_server
 
 
-# def serverid(func):
-# 	"""
-# 		Decorator for class methods to transform incoming Server object to string with his Server.id.
-# 		It will search for Server in kwargs: func(server=Server_Obj/Server_Id).
-# 		If dont exist it'll try to transform first incoming argument except 'self': self.method(server).
-# 		If first argument isnt Server_Obj it wont change anything.
-# 	"""
-#
-# 	def serverid_wrap(self, *args, **kwargs):
-# 		server = kwargs.get('server')
-# 		if not server:
-# 			if args:
-# 				argz = list(args)
-# 				argz[0] = valid_server(argz[0])
-# 				args = tuple(argz)
-# 		else:
-# 			kwargs['server'] = valid_server(server)
-# 		func(self, *args, **kwargs)
-#
-# 	return serverid_wrap
-
-
-# def getplayer(func):
-# 	"""
-# 		Decorator for class Play  methods to get 'player' object to function if it accept just 'server' or 'server_id'.
-# 		Itll search for server or player in kwargs if 'player' found  it will just pass it to decorated method.
-# 		Else if atleast 'server' found, it will use 'get_method' method from class Play to get player
-# 		and then will pass to decorated method.
-# 	"""
-#
-# 	def getplayer_wrap(self, *args, **kwargs):
-# 		server = kwargs.get('server')
-# 		player = kwargs.get('player')
-# 		if not player and not server:
-# 			return
-# 		elif not player and server:
-# 			player = self.get_player(valid_server(server))
-# 			if player:
-# 				kwargs['player'] = player
-# 		func(self, *args, **kwargs)
-#
-# 	return getplayer_wrap
-
-
 class Player:
 	Players = {}
 

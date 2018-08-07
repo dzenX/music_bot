@@ -55,7 +55,7 @@ class Command:
 		'kys': 'shutdown',
 		'shutdown': 'shutdown',
 		# ################
-		# 'play': 'play',
+		'play': 'play',
 		# ################
 		# 'pause': 'pause',
 		# 'resume': 'resume',

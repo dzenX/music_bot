@@ -1,7 +1,4 @@
-# import youtube_dl it was unused btw
-import asyncio
 import os
-import sys
 from datetime import datetime
 
 import discord
@@ -9,6 +6,12 @@ import yaml
 
 # TODO: help RUTULIA
 # self = discord.self()
+from commands import Command
+from connection import Connect
+from player import Player
+from settings import Settings
+from utils import Error
+
 """"
 	Settings for creating youtube stream
 """
@@ -40,23 +43,18 @@ class Main(discord.Client):
 		Class represents discord bot work and functions
 	"""
 
-	############################################
-	#
-	#	__init__ Block
-	#
-################################################
 	def __init__(self):
 		super().__init__()
 		self.__load_defaults()
 		self.__load_opus()
 		self.__load_token()
-		self.__load_settings()
+		self.__load_blocks()
 		self.__start_bot()
 
-	############################################
 	""""
 		Default settings for bot in case
-		there is no config file
+		there is no config file or needed parameters in.
+		
 	"""
 	Defaults = {
 		'SettingsFolder': 'settings',
@@ -70,6 +68,10 @@ class Main(discord.Client):
 	}
 
 	def __load_defaults(self):
+		"""
+			Loading parameters from config, if config dont provide value, takes it from self.Defaults.
+
+		"""
 		print('[INFO] Loading default settings')
 		mode = 'r' if os.path.isfile(self.Defaults['ConfigFile']) else 'w+'
 		with open('config.yml', mode) as file:
@@ -86,10 +88,10 @@ class Main(discord.Client):
 		print('[INFO] Defaults succesfully loaded')
 		print('------')
 
-	############################################
 	def __load_opus(self):
 		""""
-			Loading codec
+			Loading voice codec.
+
 		"""
 		print('[INFO] Trying to load OpusLib:')
 		if not discord.opus.is_loaded():
@@ -103,11 +105,16 @@ class Main(discord.Client):
 			print("[INFO] Opus already loaded!")
 		print('------')
 
-	############################################
 	def __load_token(self):
+		"""
+			Loading token from filename provided by settings,
+			else it will try to brngs it extractly from config.
+			If no token will be founded, it will ask u to input it manually to save it in token file.
+
+		"""
 		print('[INFO] Trying to load token')
 		if os.path.isfile(self.TokenFile):
-			with open(self.TokenFile, 'r') as file:
+			with open(self.TokenFile) as file:
 				self.Token = file.read()
 			print('[INFO] Token succesfully loaded from token file')
 		else:
@@ -124,34 +131,24 @@ class Main(discord.Client):
 				print("[INFO] Token succesfully saved")
 		print('------')
 
-	############################################
-	def __load_settings(self):
-		print('[INFO] Trying to load saved settings')
-		if not os.path.isdir(self.SettingsFolder):
-			os.makedirs(self.SettingsFolder)
-			print('[WARNING] No saved settings directory found, so ill create it')
-		else:
-			print('[INFO] Loading settings from files')
-			files = os.listdir(self.SettingsFolder)
-			files = list(filter(lambda x: x.endswith('.yml'), files))
-			if not files:
-				print('[WARNING] No saved settings found in \'{}\' directory'.format(self.SettingsFolder))
-			else:
-				self._update_cfg_from_files(files)
-				print('[INFO] Settings succesfully loaded')
-		print('------')
+	def __load_blocks(self):
+		"""
+			Initialization of main functionality blocks of bot.
 
-	############################################
-	def _update_cfg_from_files(self, files):
-		for file in files:
-			with open(self.SettingsFolder + file, 'r') as f:
-				self.add_cfg_to_list(file[:-4], yaml.load(f))
+		"""
+		# TODO: Providing client to main functionality blocks seems not really good ;( "Peredacha clienta"
+		self.Settings = Settings(self.SettingsFolder)
+		self.Player = Player(self)
+		self.Connect = Connect(self)
+		self.Command = Command(self)
 
-	############################################
 	def __start_bot(self, **kwargs):
+		"""
+			Starting 
+
+		"""
 		self.loop.run_until_complete(self.start(self.Token, **kwargs))
 
-	############################################
 	async def on_ready(self):
 		print('[INFO] Logged in as:')
 		print('\t' + self.user.name)
@@ -165,635 +162,39 @@ class Main(discord.Client):
 		print('-----------------------------------')
 
 	################################################
-
-	################################################
-	#
-	#	Commands block
-	#
-	################################################
-	""""
-		Commands for bot
-		To add command write:
-		'Name_of_command' : 'Name_of_function_that_implements_it',
-	"""
-	#TODO: send_message func
-	commands_arr = {
-		'hello': 'cmd_hello',
-		'invite': 'cmd_invite',
-		################
-		'connect': 'cmd_connect',
-		'summon': 'cmd_connect',
-		################
-		'disconnect': 'cmd_disconnect',
-		'gtfo': 'cmd_disconnect',
-		################
-		'kys': 'cmd_shutdown',
-		'shutdown': 'cmd_shutdown',
-		################
-		'play': 'cmd_play',
-		################
-		'pause': 'cmd_pause',
-		'resume': 'cmd_resume',
-		'stop': 'cmd_stop',
-		'volume': 'cmd_volume',
-		'now': 'cmd_now',
-		################
-		'loop': 'cmd_loop',
-		################
-		'reload': 'cmd_reload',
-		'rel': 'cmd_reload',
-		'relaod': 'cmd_reload',
-		################
-		'set': 'cmd_set_settings',
-		'settings': 'cmd_show_settings',
-		'reset': 'cmd_reset_settings',
-		################
-		't': 'cmd_test',
-		################
-		'help': 'cmd_help',
-		################
-	}
-	
-	commands_descr = {
-		'hello': 'Say hello to bot',
-		'invite': 'Invite link for bot',
-		################
-		'connect': 'Connect bot to voice channel you are in, or to mentioned voice channel',
-		'summon': 'Same as connect, but created for cute guys',
-		################
-		'disconnect': 'Disconnects from current voice channel',
-		'gtfo': 'Same as connect, but created for REAL GANSTA\'S',
-		################
-		'kys': 'Turns off the bot with WITH REAL HATE',
-		'shutdown': 'Turns off the bot',
-		################
-		'play': 'Plays song',
-		################
-		'pause': 'Pausing current playing song',
-		'resume': 'Resumes current stopped song',
-		'stop': 'Stops playing song',
-		'volume': 'Regulate volume',
-		'now': 'Shows current song',
-		################
-		'loop': 'Loops song',
-		################
-		'reload': 'Reloads bot',
-		'rel': 'Reloads bot for lazy people',
-		'relaod': 'Reloads bot for some iq braindead people',
-		################
-		'set': 'Sets bot settings',
-		'settings': 'Shows bot settings',
-		'reset': 'Resets bot settigs',
-		################
-		#'t': 'cmd_test',
-		################
-		'help': 'Shows this to you',
-	}
-	
-	############################################
-	async def cmd_hello(self, *args, **kwargs):
-		msg = kwargs.get('msg')
-		if msg.author.id == '193741119140528129':
-			message = 'Hello {0.author.mention}, wanna some anime?'.format(msg)
-		else:
-			message = 'Hello {0.author.mention}, wanna some music?'.format(msg)
-		await self.send_message(msg.channel, message)
-
-	############################################
-	async def cmd_connect(self, *args, **kwargs):
-		msg = kwargs.get('msg')
-		channel_name = ' '.join(args)
-		if channel_name:
-			await self.connect_voice_channel_by_name(msg, channel_name)
-		else:
-			await self.connect_voice_channel_by_author(msg)
-
-	############################################
-	# async def cmd_connect(self, *args, **kwargs):
-	# 	msg = kwargs.get('msg')
-	# 	channel_name = ' '.join(args)
-	# 	if channel_name:
-	# 		channel = self.find_voice_channel_by_name(msg.server, channel_name)
-	# 		if channel:
-	# 			await self.connect_(msg, channel = channel)
-	# 		else:
-	# 			await self.Error(8, msg) # 'Create such a channel first'
-	# 	else:
-	# 		await self.connect_(msg)
-	############################################
-	async def cmd_disconnect(self, *args, **kwargs):
-		msg = kwargs.get('msg')
-		leaved = await self.leave_voice_by_server(msg.server)
-		if not leaved:
-			await self.error(2, msg)  # 'I`m already homeless :('
-
-	############################################
-	async def cmd_shutdown(self, *args, **kwargs):
-		msg = kwargs.get('msg')
-		await self.send_file(msg.channel, 'content\\shutdown.jpg')
-		await self.logout()
-		exit(0)
-
-	############################################
-	async def cmd_play(self, *args, **kwargs):
-		msg = kwargs.get('msg')
-		if args:
-			url = args[0]
-			if self.is_youtube_link(url):
-				# if not self.is_youtube_list(url):
-				if self.is_voice_connected(msg.server):
-					await self.start_solo_song(msg, url)
-				else:
-					await self.connect_voice_channel_by_author(msg)
-					await self.start_solo_song(msg, url)
-			# else:
-			#	await self.Error(6, msg) # 'It`s not a single song!'
-			else:
-				await self.error(5, msg)  # 'Not valid link'
-		else:
-			await self.error(12, msg)  # 'Enter this f*&*ing song url here. Don\'t make me nervous, you mongol kid.'
-
-	############################################
-	async def cmd_stop(self, *args, **kwargs):
-		msg = kwargs.get('msg')
-		player = await self.get_server_player(msg.server.id)
-		if player:
-			player.stop()
-		else:
-			await self.error(4, msg)  # 'Nothing is being played'
-
-	############################################
-	async def cmd_reload(self, *args, **kwargs):
-		msg = kwargs.get('msg')
-		os.system('cls')
-		print('Don`t look there stranger! I`m fucking changi..ahem..reloading, meow!! ')
-		print('------')
-		await self.send_file(msg.channel, 'content\\reload.png')
-		await self.logout()
-		os.execl(sys.executable, 'python', 'bot.py', *sys.argv[1:])
-
-	############################################
-	# TODO: Check param method
-	async def cmd_volume(self, *args, **kwargs):
-		msg = kwargs.get('msg')
-		if args:
-			try:
-				v = float(args[0])
-			except:
-				await self.error(7, msg)  # 'Not valid volume value'
-			else:
-				if v > 2:
-					await self.error(11, msg)  # 'RIP ears'
-					v = 2
-				elif v < 0:
-					await self.error(16, msg)  # 'Is there life below 0?'
-					v = 0
-				self.set_attributes(msg.server.id, Volume=v)
-				player = await self.get_server_player(msg.server.id)
-				if player:
-					player.volume = v
-		else:
-			await self.error(10, msg)  # 'Invalid params, just like you'
-
-	############################################
-	async def cmd_now(self, *args, **kwargs):
-		msg = kwargs.get('msg')
-		player = await self.get_server_player(msg.server.id)
-		if player:
-			minutes = player.duration // 60
-			seconds = player.duration % 60
-			message = 'Now plaing:\n\t"{}"\t({}:{}).\nUploaded by:\n\t"{}"\nUrl:\n\t{}'
-			message = message.format(player.title, minutes, seconds, player.uploader, player.url)
-			await self.send_message(msg.channel, message)
-		else:
-			await self.error(4, msg)  # 'Nothing is being played'
-
-	############################################
-	async def cmd_pause(self, *args, **kwargs):
-		msg = kwargs.get('msg')
-		player = await self.get_server_player(msg.server.id)
-		if player:
-			if player.is_done():
-				await self.error(13, msg)  # 'Your song already ended'
-			elif not player.is_playing():
-				await self.error(15, msg)  # 'The song is already paused, dont you hear this quality silence?'
-			else:
-				player.pause()
-		else:
-			await self.error(4, msg)  # 'Nothing is being played'
-
-	############################################
-	async def cmd_resume(self, *args, **kwargs):
-		msg = kwargs.get('msg')
-		player = await self.get_server_player(msg.server.id)
-		if player:
-			if player.is_done():
-				await self.error(13, msg)  # 'Your song already ended'
-			elif player.is_playing():
-				await self.error(14, msg)  # 'The song is already playing, dont you hear?'
-			else:
-				player.resume()
-		else:
-			await self.error(4, msg)  # 'Nothing is being played'
-
-	############################################
-	async def cmd_invite(self, *args, **kwargs):
-		msg = kwargs.get('msg')
-		if self.InviteLink:
-			await self.send_message(msg.channel, self.InviteLink)
-		else:
-			await self.error(20, msg)  # 'No invite link was provided'
-
-	############################################
-	async def cmd_loop(self, *args, **kwargs):
-		pass
-
-	############################################
-	# TODO: Make it userfriendly
-	async def cmd_set_settings(self, *args, **kwargs):
-		msg = kwargs.get('msg')
-		cfg = {}
-		for arg in args:
-			cfg.update(self.get_dict(*arg.split(':')))
-		self.set_attributes(msg.server.id, **cfg)
-
-	############################################
-	async def cmd_reset_settings(self, *args, **kwargs):
-		msg = kwargs.get('msg')
-		self.reset_settings(msg.server.id)
-
-	############################################
-	async def cmd_show_settings(self, *args, **kwargs):
-		msg = kwargs.get('msg')
-		cfg = self.get_cfg_from_list(msg.server_id)
-		if not cfg:
-			await self.error(21, msg)  # 'No setting saved for your server'
-		else:
-			await self.send_message(msg.channel, cfg)
-
-	############################################
-	async def cmd_help(self, *args, **kwargs):
-		msg = kwargs.get('msg')
-		await self.send_message(msg.channel, 'I\'m powerful enough to do this')
-		message = ""
-		for key in self.commands_arr:
-			message = message + self.Prefix + str(key) + ": " + self.commands_descr.get(str(key), "Can't help") + "\n"
-		await self.send_message(msg.channel, message)
-		await self.send_message(msg.channel, 'Choose your way stranger, and may the force be with you!')
-	############################################
-	async def cmd_test(self, *args, **kwargs):
-		msg = kwargs.get('msg')
-		print('--------')
-		print('[TEST]')
-		# sid = msg.server.id
-		############################################
-		# cfg = {'gg': 'ez'}
-		# print(cfg)
-		# print(self.Settings)
-		# print(self.get_cfg_from_file(sid))
-		# await self.send_message(msg.server.get_member('370641997238894602'), self.arts[0])
-		# self.add_cfg_to_list(sid,cfg)
-		# print(self.Settings)
-		# self.set_attributes(sid, gg = 'wp', sht = 12)
-		# print(self.Settings)
-		# print(self.get_cfg_from_list(sid))
-		# cf = self.get_cfg_from_list(sid)
-		# print('Set-----')
-		# self.set_attributes(sid, gg = 'wp', sht = 12)
-		# print(self.get_cfg_from_list(sid))
-		# print(cf)
-		print('--------')
-
-	############################################
-	################################################
-
-	################################################
 	#
 	#	On_Message block
 	#
 	################################################
-	############################################
 	async def on_message(self, msg: discord.Message):
 		await super().wait_until_ready()
-		# if not msg.content:
-		# 	pass
-		# elif msg.author == self.user:
-		# 	await self.chat_log(msg)
-		# TODO: Fix exception when commands called from private chat
-		# self.set_attributes(msg.server.id, Volume = v)
-		# AttributeError: 'NoneType' object has no attribute 'id'
 		if msg.content.startswith(self.Prefix) and not msg.author == self.user:
-			# await self.chat_log(msg)
-			mess_arr = msg.content[len(self.Prefix):].split()
-			if mess_arr:
-				cmd = mess_arr[0].lower()
-				args = mess_arr[1:]
-				command = self.commands_arr.get(cmd)
-				if command:
-					await getattr(self, command)(*args, msg=msg)
-				else:
-					await self.error(17, msg)  # 'No such command'
-			else:
-				await self.error(19, msg)  # 'What are you hesitant.. Command me dont be a p&&sy, Meow!'
+			await self._command(msg)
 
-	############################################
-	################################################
+	async def _command(self, msg):
+		msg_arr = msg.content[len(self.Prefix):].split()
+		ctx = dict(Author=msg.author, Server=msg.server, Channel=msg.channel)
 
-	################################################
-	#
-	#	Utils Block
-	#
-	################################################
-	############################################
-	# TODO: Same success message system
-	async def error(self, error_id, msg):
-		""""
-			Error handling system
-		"""
-		errors = {
-			'1': 'You\'re not on the voice channel',
-			'2': 'I`m already homeless :(',
-			'3': 'Unable to connect',
-			'4': 'Nothing is being played',
-			'5': 'Not valid link',
-			'6': 'It`s not a single song!',
-			'7': 'Not valid volume value',
-			'8': 'Create such a channel first, motherfucker',
-			'9': 'I\'m already here, dont you see me?',
-			'10': 'Invalid params, just like you',
-			'11': 'RIP ears\n{}'.format(datetime.now().strftime('%Y-%m-%d')),
-			'12': 'Enter this f*&*ing song url here. Don\'t make me nervous, you mongol kid.',
-			'13': 'Your song already ended',
-			'14': 'The song is already playing, dont you hear?',
-			'15': 'The song is already paused, dont you hear this quality silence?',
-			'16': 'Is there life below 0?',
-			'17': 'No such command',
-			'18': 'I\'m already with you, my blind kitten, MEOW!',
-			'19': 'What are you hesitant.. Command me dont be a p&&sy, Meow!',
-			'20': 'No invite link was provided',
-			'21': 'No setting saved for your server',
-			'22': 'Do not try to deceive me and slowly, so that I see your hands, come to my server',
-		}
-		message = errors.get(str(error_id), 'Unknown error')
-		await self.send_message(msg.channel, embed=discord.Embed(color=discord.Color.red(), description=message))
-
-	############################################
-	@staticmethod
-	def is_youtube_list(url):
-		return True if ('youtu.be' or 'youtube.com' in url) and ('list=' in url) else False
-
-	############################################
-	@staticmethod
-	def is_youtube_link(url):
-		return True if 'youtu.be' or 'youtube.com' in url else False
-
-	############################################
-	# TODO: Log system
-	@staticmethod
-	async def chat_log(msg):
-		log = '[CHATLOG] ({}) [{}] <{}> {}: {}'
-		log = log.format(msg.timestamp, msg.server.name, msg.channel.name, msg.author.display_name, msg.content)
-		print(log)
-
-	############################################
-	################################################
-
-	################################################
-	#
-	#	Settings Block
-	#
-	################################################
-	Settings = {}
-
-	############################################
-
-	# main part
-
-	############################################
-	def get_attr(self, server_id, attr):
-		cfg = self.get_cfg_from_list(server_id)
-		return cfg.get(attr) if cfg else getattr(self, attr)
-
-	############################################
-	def set_attributes(self, server_id, **kwargs):
-		cfg = self.get_cfg_from_list(server_id)
-		if not cfg:
-			cfg = self.add_cfg_to_list(server_id, {})
-		cfg.update(kwargs)
-		self.save_cfg_to_file(server_id, cfg)
-
-	############################################
-	def reset_settings(self, server_id):
-		self.remove_cfg_from_list(server_id)
-		self.remove_settings_file(server_id)
-
-	############################################
-
-	############################################
-
-	# list conrol
-
-	############################################
-	def add_cfg_to_list(self, server_id, cfg):
-		self.Settings.update(self.get_dict(server_id, cfg))
-		return self.Settings.get(server_id)
-
-	############################################
-	def remove_cfg_from_list(self, server_id):
-		return True if self.Settings.pop(server_id, None) else False
-
-	############################################
-	def get_cfg_from_list(self, server_id):
-		return self.Settings.get(server_id)
-
-	############################################
-
-	############################################
-
-	# file control
-
-	# ############################################
-	# def save_setting_to_files(self):
-	# 	for server_id, cfg in self.Settings.items():
-	# 		self.save_cfg_to_file(server_id, cfg)
-	# ############################################
-	def save_cfg_to_file(self, server_id, cfg):
-		file = self.SettingsFolder + '{}.yml'.format(server_id)
-		with open(file, 'w') as f:
-			yaml.dump(cfg, f, default_flow_style=False)
-
-	############################################
-	def get_cfg_from_file(self, server_id):
-		file = self.SettingsFolder + '{}.yml'.format(server_id)
-		if os.path.isfile(file):
-			with open(file, 'r') as f:
-				cfg = yaml.load(f)
-			return cfg
-
-	############################################
-	def remove_settings_file(self, server_id):
-		self.silent_remove(self.SettingsFolder + '{}.yml'.format(server_id))
-
-	############################################
-
-	############################################
-
-	# utils
-
-	############################################
-	@staticmethod
-	def silent_remove(filename):
+		# TODO Log system should log from here
 		try:
-			os.remove(filename)
-		except OSError:
+			await self.Command.ex(msg_arr, ctx)
+		except Error as e:
+			if e.embed:
+				embed = discord.Embed(color=discord.Color.red(), description=str(e))
+				await self.send_message(msg.channel, embed=embed)
+			else:
+				await self.send_message(msg.channel, str(e))
+		else:  # TODO: what should he do if command dont need to print anything
+			# await self.send_message(msg.channel, 'Idk whats happening here')
 			pass
 
-	############################################
-	@staticmethod
-	def get_dict(key, value):
-		try:
-			result = float(value)
-		except:
-			result = value
-		return dict([(key, result)])
-
-	############################################
-	################################################
-
-	################################################
-	#
-	#	Play block
-	#
-	################################################
-	players = {}
-
-	############################################
-	async def get_server_player(self, server_id):
-		return self.players.get(server_id)
-
-	############################################
-	async def start_new_player(self, msg, url):
-		try:
-			player = await super().voice_client_in(msg.server).create_ytdl_player(url)
-		except Exception as e:
-			print(e)
-		else:
-			return player
-
-	############################################
-	async def add_player_to_list(self, server_id, player):
-		self.players[server_id] = player
-
-	############################################
-	async def remove_player(self, server_id):
-		self.players.pop(server_id, None)
-
-	############################################
-	async def start_solo_song(self, msg, url):
-		player = await self.start_new_player(msg, url)
-		await asyncio.sleep(20)
-		# player.volume = self.get_attr(msg.server.id,'Volume')
-		await self.add_player_to_list(msg.server.id, player)
-		# await self.timer(msg)
-		player.start()
-
-	############################################
-	async def timer(self, msg):
-		message = 'Your song starts in: 10'
-		curr_msg = await self.send_message(msg.channel, message)
-		for i in range(1, 10):
-			await asyncio.sleep(1)
-			message = 'Your song starts in: {}'.format(10 - i)
-			await self.edit_message(curr_msg, message)
-		await asyncio.sleep(1)
-		message = 'BOOOOOOOM!!!!'
-		await self.edit_message(curr_msg, message)
-		await self.delete_message(curr_msg)
-
-	############################################
-	################################################
-
-	#################################################
-	#
-	#	Connect block
-	#
-	#################################################
-	# async def connect_(self, msg, channel = None):
-	# 	if not channel:
-	# 		channel = msg.author.voice_channel
-	# TODO: Check voice channel
-	# 		if not channel:
-	# 			await self.Error(1, msg) # 'You\'re not on the voice channel'
-	# 			return
-	# 	vc = super().voice_client_in(msg.server)
-	# 	if vc:
-	# 		if vc.channel == channel:
-	# 			await self.Error(18, msg) # 'I\'m already with you, my blind kitten, MEOW!'
-	# 			return
-	# 		await vc.move_to(channel)
-	# 	else:
-	# 		await super().join_voice_channel(channel)
-	# 	await self.send_message(msg.channel, 'Connected to: **{}**'.format(channel))
-	############################################
-	async def connect_voice_channel_by_author(self, msg):
-		if hasattr(msg.author, 'voice_channel'):
-			if msg.author.voice_channel:
-				if not await self.connect_voice_channel(msg.server, msg.author.voice_channel):
-					await self.error(18, msg)  # 'I\'m already with you, my blind kitten, MEOW!'
-			else:
-				await self.error(1, msg)  # 'You\'re not on the voice channel'
-		else:  # except when trying to call from private chat
-			await self.error(22, msg)
-
-	# 'Do not try to deceive me and slowly, so that I see your hands, come to my server'
-
-	############################################
-	async def connect_voice_channel_by_name(self, msg, channel_name):
-		channel = self.find_voice_channel_by_name(msg.server, channel_name)
-		if channel:
-			if not await self.connect_voice_channel(msg.server, channel):
-				await self.error(9, msg)  # 'I\'m already here, dont you see me?'
-		else:
-			await self.error(8, msg)  # 'Create such a channel first'
-
-	############################################
-	async def connect_voice_channel(self, server, channel):
-		if not self.is_voice_connected(server):
-			await super().join_voice_channel(channel)
-		# print('[INFO] Joined channel: \'{}\'. On server: \'{}\'.'.format(channel, channel.server))
-		else:
-			voiceClient = super().voice_client_in(server)
-			if voiceClient.channel == channel:
-				return False
-			await voiceClient.move_to(channel)
-		return True
-
-	# print('[INFO] Moved to channel: \'{}\'. On server: \'{}\'.'.format(channel, channel.server))
-	############################################
-	@staticmethod
-	def find_voice_channel_by_name(server, channel_name):
-		for channel in server.channels:
-			if str(channel.type) == "voice" and channel.name.lower() == channel_name.lower():
-				return channel
-		# print('[ERROR] No such channel: \'{}\' on server: \'{}\''.format(channel_name, server))
-		return None
-
-	############################################
-	async def leave_voice_by_server(self, server):
-		if self.is_voice_connected(server):
-			voiceClient = super().voice_client_in(server)
-			# print('[INFO] Disconnected from channel: \'{}\'. On server: \'{}\'.'.format(voiceClient.channel, msg.server))
-			await voiceClient.disconnect()
-			return True
-
-	############################################
 	arts = [
 		"""
 	░░░░▄███▓███████▓▓▓░░░░
 	░░░███░░░▒▒▒██████▓▓░░░ 
 	░░██░░░░░░▒▒▒██████▓▓░░
 	░██▄▄▄▄░░░▄▄▄▄█████▓▓░░
-	░██░(◐)░░░▒(◐)▒██████
+	░██░(◐)░░░▒(◐)▒██████▓▓░░
 	░██░░░░░░░▒▒▒▒▒█████▓▓░ 
 	░██░░░▀▄▄▀▒▒▒▒▒█████▓▓░
 	░█░███▄█▄█▄███░█▒████▓▓
@@ -806,11 +207,8 @@ class Main(discord.Client):
 	]
 
 
-################################################
-
-
 ##########################################################
 # ========================================================#
-Main()  # Main Part of Your Bot	!!!				 #
+Main()  # Main Part of Your Bot	!!!				          #
 # ========================================================#
 ##########################################################

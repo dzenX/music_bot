@@ -200,4 +200,5 @@ class main(discord.Client):
 		self.__start_bot(self.token)
 
 
-main()
+if __name__ == "__main__":
+	main()

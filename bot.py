@@ -385,13 +385,14 @@ class main(discord.Client):
 	def __start_bot(self, token, **kwargs):
 		self.loop.run_until_complete(self.start(token, **kwargs))
 	############################################
-	def __init__(self):
+	def __init__(self, **kwargs):
 		super().__init__()
 		self.voiceClient = None
 		self.curr_song = None
 		self.__load_cfg()
 		self._load_opus()
 		self.__start_bot(self.token)
-	
-main()
 
+
+if __name__ == "__main__":
+	main()

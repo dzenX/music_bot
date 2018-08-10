@@ -66,7 +66,6 @@ class Main(discord.Client):
 		'ConfigFile': 'config.yml',
 	}
 
-
 	def __load_defaults(self):
 		"""
 			Loading parameters from config, if config dont provide value, takes it from self.Defaults.
@@ -94,7 +93,7 @@ class Main(discord.Client):
 	def __load_token(self, cfg):
 		"""
 			Loading token from filename provided by settings,
-			else it will try to bring it extractly from config.
+			else it will try to bring it directly from config.
 			If no token will be founded, it will ask u to input it manually to save it in token file.
 
 		"""
@@ -134,8 +133,6 @@ class Main(discord.Client):
 			print("[INFO] Opus already loaded!")
 		print('------')
 
-
-
 	def __load_blocks(self):
 		"""
 			Initialization of main functionality blocks of bot.
@@ -149,12 +146,17 @@ class Main(discord.Client):
 
 	def __start_bot(self, **kwargs):
 		"""
-			Starting 
+			Starting main bot loop
 
 		"""
 		self.loop.run_until_complete(self.start(self.Token, **kwargs))
 
 	async def on_ready(self):
+		"""
+			Method to provide some info about bot to console and set game-status for him
+			after successful initialization.
+
+		"""
 		print('[INFO] Logged in as:')
 		print('\t' + self.user.name)
 		print('\t' + self.user.id)
@@ -172,11 +174,25 @@ class Main(discord.Client):
 	#
 	################################################
 	async def on_message(self, msg: discord.Message):
+		"""
+			Method to catch and prossec messages.
+			It will be called each time client get message.
+
+		:param msg: Takes instanse if discord.Message class
+		:return: None
+		"""
 		await super().wait_until_ready()
 		if msg.content.startswith(self.Prefix) and not msg.author == self.user:
 			await self._command(msg)
 
 	async def _command(self, msg):
+		"""
+			Method to procces messages starting with prefix as commands
+			and execute given command
+
+		:param msg: Takes instanse if discord.Message class
+		:return: None
+		"""
 		msg_arr = msg.content[len(self.Prefix):].split()
 		ctx = dict(Author=msg.author, Server=msg.server, Channel=msg.channel)
 
@@ -189,9 +205,6 @@ class Main(discord.Client):
 				await self.send_message(msg.channel, embed=embed)
 			else:
 				await self.send_message(msg.channel, str(e))
-		else:  # TODO: what should he do if command dont need to print anything
-			# await self.send_message(msg.channel, 'Idk whats happening here')
-			pass
 
 	arts = [
 		"""

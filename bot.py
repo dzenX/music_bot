@@ -47,7 +47,6 @@ class Main(discord.Client):
 		super().__init__()
 		self.__load_defaults()
 		self.__load_opus()
-		self.__load_token()
 		self.__load_blocks()
 		self.__start_bot()
 
@@ -67,6 +66,7 @@ class Main(discord.Client):
 		'ConfigFile': 'config.yml',
 	}
 
+
 	def __load_defaults(self):
 		"""
 			Loading parameters from config, if config dont provide value, takes it from self.Defaults.
@@ -75,18 +75,47 @@ class Main(discord.Client):
 		print('[INFO] Loading default settings')
 		mode = 'r' if os.path.isfile(self.Defaults['ConfigFile']) else 'w+'
 		with open('config.yml', mode) as file:
-			self.cfg = yaml.load(file)
+			cfg = yaml.load(file)
+			if not cfg:
+				cfg = {}
 			# -------------------------------------------------------#
-			self.SettingsFolder = self.cfg.get('SettingsFolder', self.Defaults['SettingsFolder']) + '/'
-			self.TokenFile = self.cfg.get('TokenFile', self.Defaults['TokenFile'])
-			self.InviteLink = self.cfg.get('InviteLink', self.Defaults['InviteLink'])
-			self.OpusFile = self.cfg.get('OpusFile', self.Defaults['OpusFile'])
+			self.SettingsFolder = cfg.get('SettingsFolder', self.Defaults['SettingsFolder']) + '/'
+
+			self.__load_token(cfg)
+			self.InviteLink = cfg.get('InviteLink', self.Defaults['InviteLink'])
+			self.OpusFile = cfg.get('OpusFile', self.Defaults['OpusFile'])
 			# -------------------------------------------------------#
-			self.Prefix = self.cfg.get('Prefix', self.Defaults['Prefix'])
-			self.Volume = self.cfg.get('Volume', self.Defaults['Volume'])
-			self.AdminRole = self.cfg.get('AdminRole', self.Defaults['AdminRole'])
+			self.Prefix = cfg.get('Prefix', self.Defaults['Prefix'])
+			self.Volume = cfg.get('Volume', self.Defaults['Volume'])
+			self.AdminRole = cfg.get('AdminRole', self.Defaults['AdminRole'])
 		print('[INFO] Defaults succesfully loaded')
 		print('------')
+
+	def __load_token(self, cfg):
+		"""
+			Loading token from filename provided by settings,
+			else it will try to bring it extractly from config.
+			If no token will be founded, it will ask u to input it manually to save it in token file.
+
+		"""
+		print('[INFO] Trying to load token')
+		self.TokenFile = cfg.get('TokenFile', self.Defaults['TokenFile'])
+		if os.path.isfile(self.TokenFile):
+			with open(self.TokenFile) as file:
+				self.Token = file.read()
+			print('[INFO] Token succesfully loaded from token file')
+		else:
+			print('[WARNING] Token file not found. I will try to load it from cfg')
+			self.Token = cfg.get('Token', None)
+			if self.Token:
+				print('[INFO] Token succesfully loaded from config')
+			else:
+				print("Please enter your bot token:")
+				token = input()
+				print("[INFO] Saving token...")
+				with open(self.TokenFile, "w") as f:
+					f.write(token)
+				print("[INFO] Token succesfully saved")
 
 	def __load_opus(self):
 		""""
@@ -105,31 +134,7 @@ class Main(discord.Client):
 			print("[INFO] Opus already loaded!")
 		print('------')
 
-	def __load_token(self):
-		"""
-			Loading token from filename provided by settings,
-			else it will try to brngs it extractly from config.
-			If no token will be founded, it will ask u to input it manually to save it in token file.
 
-		"""
-		print('[INFO] Trying to load token')
-		if os.path.isfile(self.TokenFile):
-			with open(self.TokenFile) as file:
-				self.Token = file.read()
-			print('[INFO] Token succesfully loaded from token file')
-		else:
-			print('[WARNING] Token file not found')
-			self.Token = self.cfg.get('Token', None)
-			if self.Token:
-				print('[INFO] Token succesfully loaded from config')
-			else:
-				print("Please enter your bot token:")
-				token = input()
-				print("[INFO] Saving token...")
-				with open(self.TokenFile, "w") as f:
-					f.write(token)
-				print("[INFO] Token succesfully saved")
-		print('------')
 
 	def __load_blocks(self):
 		"""

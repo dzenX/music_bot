@@ -1,3 +1,5 @@
 $ cat .gitignore
 *.txt
 *.sublime*
+settings/
+.idea/

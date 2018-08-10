@@ -1,11 +1,11 @@
-import discord
-import yaml
-import youtube_dl
 import asyncio
+import copy
 import os
 import sys
-import copy
 from datetime import datetime
+
+import discord
+import yaml
 
 #
 #     LOOP BRANCH
@@ -17,17 +17,17 @@ from datetime import datetime
 ytdl_format_options = {
 	'format': 'bestaudio/best',
 	'extractaudio': True,
-	'outtmpl': '%(extractor)s-%(id)s-%(title)s.%(ext)s',
-	'restrictfilenames': True,
-	'noplaylist': True,
-	'nocheckcertificate': True,
-	'ignoreerrors': True,
-	'logtostderr': False,
-	'quiet': True,
-	'verbose': False,
-	'no_warnings': True,
-	'default_search': 'auto',
-	'source_address': '0.0.0.0',
+	# 'outtmpl': '%(extractor)s-%(id)s-%(title)s.%(ext)s',
+	# 'restrictfilenames': True,
+	# 'noplaylist': True,
+	# 'nocheckcertificate': True,
+	# 'ignoreerrors': True,
+	# 'logtostderr': False,
+	# 'quiet': True,
+	# 'verbose': False,
+	# 'no_warnings': True,
+	# 'default_search': 'auto',
+	# 'source_address': '0.0.0.0',
 }
 
 

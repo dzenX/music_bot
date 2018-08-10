@@ -40,7 +40,7 @@ class main(discord.Client):
 			self.Reconnect = self.cfg['AutoReconnect']
 			self.Prefix = self.cfg['Prefix']
 			self.Volume = self.cfg['Volume']
-		with open('token.txt','r') as file:
+		with open('my.token', 'r') as file:
 			self.token = file.read()
 	############################################
 	async def on_ready(self):

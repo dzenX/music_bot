@@ -3,3 +3,4 @@ $ cat .gitignore
 *.sublime*
 settings/
 .idea/
+*.token

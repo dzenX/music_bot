@@ -33,7 +33,7 @@ class main(discord.Client):
 		with open("config.yml", "r") as file:
 			self.cfg = yaml.load(file)
 			self.Prefix = self.cfg['Prefix']
-		with open('token.txt', 'r') as file:
+		with open('my.token', 'r') as file:
 			self.token = file.read()
 
 	############################################

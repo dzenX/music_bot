@@ -28,7 +28,18 @@ ytdl_format_options = {
 
 
 class main(discord.Client):
-	############################################
+
+	def start_bot(self, **kwargs):
+		self.voiceClient = None
+		self.curr_song = None
+		self.__load_cfg()
+		self._load_opus()
+		self.loop.run_until_complete(self.start(self.token, **kwargs))
+
+	def __init__(self):
+		super().__init__()
+
+
 	def __load_cfg(self):
 		with open("config.yml", "r") as file:
 			self.cfg = yaml.load(file)
@@ -36,70 +47,7 @@ class main(discord.Client):
 		with open('my.token', 'r') as file:
 			self.token = file.read()
 
-	############################################
-	async def on_ready(self):
-		print('Logged in as')
-		print(self.user.name)
-		print(self.user.id)
-		print('------')
-		print('Bot loaded succesfully at {}.'.format(datetime.now().strftime('%H:%M:%S')))
-		print('------')
 
-	async def Error(self, error_id, msg):
-		Errors = {
-			'1': 'You\'re not on the voice channel',
-			'2': 'I`m already homeless :(',
-			'3': 'Unable to connect',
-			'4': 'Nothing is being played',
-			'5': 'Not valid link',
-			'6': 'It`s not a single song!',
-			'7': 'Not valid volume value',
-			'8': 'Create such a channel first, motherfucker',
-			'9': 'I\'m already here, dont you see me?',
-			'10': 'Invalid params, just like you',
-			'11': 'RIP ears\n{}'.format(datetime.now().strftime('%Y-%m-%d')),
-			'12': 'Enter this f*&*ing song url here. Don\'t make me nervous, you mongol kid.',
-			'13': 'Your song already ended',
-			'14': 'The song is already playing, dont you hear?',
-			'15': 'The song is already paused, dont you hear this quality silence?',
-			'16': 'Is there life below 0?',
-			'17': 'I\'ll multiply your life on this number! Meow !!!',
-		}
-		await self.send_message(msg.channel, Errors[str(error_id)])
-
-	def check_channel(self, msg, channel_name):
-		for chn in msg.server.channels:
-			if str(chn.type) == "voice" and chn.name.lower() == channel_name.lower():
-				return chn
-		return None
-
-	async def __connect(self, msg, channel_name=None):
-		if self.voiceClient is not None:
-			if channel_name is not None and channel_name.lower() == self.voiceClient.channel.name.lower():
-				await self.Error(9, msg)  # 'I\'m already here, dont you see me?'
-				return
-			elif channel_name is None and msg.server.get_member(
-					msg.author.id).voice_channel.name.lower() == self.voiceClient.channel.name.lower():
-				await self.Error(9, msg)  # 'I\'m already here, dont you see me?'
-				return
-			else:
-				await self.voiceClient.disconnect()
-		if channel_name is not None:
-			chn = self.check_channel(msg, channel_name)
-			if chn is not None:
-				try:
-					self.voiceClient = await super().join_voice_channel(chn)
-				except Exception as e:
-					print(e)
-					await self.Error(1, msg)  # 'You're not on the voice channel'
-			else:
-				await self.Error(8, msg)  # 'Create such a channel first'
-		else:
-			try:
-				self.voiceClient = await super().join_voice_channel(msg.author.voice_channel)
-			except Exception as e:
-				print(e)
-				await self.Error(1, msg)  # 'You're not on the voice channel'
 
 	async def start_solo_song(self, msg):
 		player = await  self.create_player(msg.content.split()[1], self.voice_client_in(msg.server))
@@ -173,6 +121,18 @@ class main(discord.Client):
 			else:
 				await self.Error(12, msg)  # 'Enter this f*&*ing song url here. Don\'t make me nervous, you mongol kid.'
 
+	#######
+	#######
+	#######
+	#######
+	#######
+	#######
+	#######
+	#######
+	#######
+	#######
+	#######
+	#######
 	def _load_opus(self):
 		print('Trying to load OpusLib:')
 		if not discord.opus.is_loaded():
@@ -188,17 +148,71 @@ class main(discord.Client):
 			print("Opus already loaded!")
 			print('------')
 
-	def __start_bot(self, token, **kwargs):
-		self.loop.run_until_complete(self.start(token, **kwargs))
+	async def on_ready(self):
+		print('Logged in as')
+		print(self.user.name)
+		print(self.user.id)
+		print('------')
+		print('Bot loaded succesfully at {}.'.format(datetime.now().strftime('%H:%M:%S')))
+		print('------')
 
-	def __init__(self):
-		super().__init__()
-		self.voiceClient = None
-		self.curr_song = None
-		self.__load_cfg()
-		self._load_opus()
-		self.__start_bot(self.token)
+	async def Error(self, error_id, msg):
+		Errors = {
+			'1': 'You\'re not on the voice channel',
+			'2': 'I`m already homeless :(',
+			'3': 'Unable to connect',
+			'4': 'Nothing is being played',
+			'5': 'Not valid link',
+			'6': 'It`s not a single song!',
+			'7': 'Not valid volume value',
+			'8': 'Create such a channel first, motherfucker',
+			'9': 'I\'m already here, dont you see me?',
+			'10': 'Invalid params, just like you',
+			'11': 'RIP ears\n{}'.format(datetime.now().strftime('%Y-%m-%d')),
+			'12': 'Enter this f*&*ing song url here. Don\'t make me nervous, you mongol kid.',
+			'13': 'Your song already ended',
+			'14': 'The song is already playing, dont you hear?',
+			'15': 'The song is already paused, dont you hear this quality silence?',
+			'16': 'Is there life below 0?',
+			'17': 'I\'ll multiply your life on this number! Meow !!!',
+		}
+		await self.send_message(msg.channel, Errors[str(error_id)])
+
+	def check_channel(self, msg, channel_name):
+		for chn in msg.server.channels:
+			if str(chn.type) == "voice" and chn.name.lower() == channel_name.lower():
+				return chn
+		return None
+
+	async def __connect(self, msg, channel_name=None):
+		if self.voiceClient is not None:
+			if channel_name is not None and channel_name.lower() == self.voiceClient.channel.name.lower():
+				await self.Error(9, msg)  # 'I\'m already here, dont you see me?'
+				return
+			elif channel_name is None and msg.server.get_member(
+					msg.author.id).voice_channel.name.lower() == self.voiceClient.channel.name.lower():
+				await self.Error(9, msg)  # 'I\'m already here, dont you see me?'
+				return
+			else:
+				await self.voiceClient.disconnect()
+		if channel_name is not None:
+			chn = self.check_channel(msg, channel_name)
+			if chn is not None:
+				try:
+					self.voiceClient = await super().join_voice_channel(chn)
+				except Exception as e:
+					print(e)
+					await self.Error(1, msg)  # 'You're not on the voice channel'
+			else:
+				await self.Error(8, msg)  # 'Create such a channel first'
+		else:
+			try:
+				self.voiceClient = await super().join_voice_channel(msg.author.voice_channel)
+			except Exception as e:
+				print(e)
+				await self.Error(1, msg)  # 'You're not on the voice channel'
 
 
+#
 if __name__ == "__main__":
-	main()
+	main().start_bot()

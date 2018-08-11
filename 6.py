@@ -113,7 +113,7 @@ class main(discord.Client):
 		import functools
 		func = functools.partial(ydl.extract_info, url, download=False)
 		info = await voice.loop.run_in_executor(None, func)
-		# print(info)
+		print(info)
 		# for st in info['entries']:
 		# 	print(st)
 		# print('-----------------------------------------------------------------------------')
@@ -127,8 +127,8 @@ class main(discord.Client):
 		# print('-----------------------------------------------------------------------------')
 		# print('-----------------------------------------------------------------------------')
 		# print('-----------------------------------------------------------------------------')
-		for key, value in info['entries'][0].items():
-			print(key, '  =====  ', value)
+		# for key, value in info['entries'][0].items():
+		# 	print(key, '  =====  ', value)
 
 		if "entries" in info:
 			info = info['entries'][0]
